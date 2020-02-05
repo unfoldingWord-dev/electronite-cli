@@ -1,18 +1,18 @@
-var fs = require('fs')
-var path = require('path')
+var fs = require('fs');
+var path = require('path');
 
-var pathFile = path.join(__dirname, 'path.txt')
+var pathFile = path.join(__dirname, 'path.txt');
 
-function getElectronPath () {
+function getElectronPath() {
     if (fs.existsSync(pathFile)) {
-        var executablePath = fs.readFileSync(pathFile, 'utf-8')
+        var executablePath = fs.readFileSync(pathFile, 'utf-8');
         if (process.env.ELECTRON_OVERRIDE_DIST_PATH) {
             return path.join(process.env.ELECTRON_OVERRIDE_DIST_PATH, executablePath)
         }
         return path.join(__dirname, 'dist', executablePath)
     } else {
-        throw new Error('Electron failed to install correctly, please delete node_modules/electron and try installing again')
+        throw new Error('Electronite failed to install correctly, please delete node_modules/electronite and try installing again')
     }
 }
 
-module.exports = getElectronPath()
+module.exports = getElectronPath();

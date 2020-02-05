@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
-const version = require('./package').version
+const version = require('./package').version;
 
-const fs = require('fs')
-const os = require('os')
-const path = require('path')
-const extract = require('extract-zip')
-const { downloadArtifact } = require('@electron/get')
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const extract = require('extract-zip');
+const { downloadArtifact } = require('@electron/get');
 
-let installedVersion = null
+let installedVersion = null;
 try {
     installedVersion = fs.readFileSync(path.join(__dirname, 'dist', 'version'), 'utf-8').replace(/^v/, '')
 } catch (ignored) {
@@ -30,12 +30,16 @@ if (installedVersion === version && fs.existsSync(electronPath)) {
 // downloads if not cached
 downloadArtifact({
     version,
-    artifactName: 'electron',
+    artifactName: 'electronite',
     force: process.env.force_no_cache === 'true',
     cacheRoot: process.env.electron_config_cache,
     platform: process.env.npm_config_platform || process.platform,
-    arch: process.env.npm_config_arch || process.arch
-}).then((zipPath) => extractFile(zipPath)).catch((err) => onerror(err))
+    arch: process.env.npm_config_arch || process.arch,
+    mirrorOptions: {
+        mirror: 'https://github.com/unfoldingWord-dev/electronite/releases/download/',
+        customDir: version + '-graphite'
+    }
+}).then((zipPath) => extractFile(zipPath)).catch((err) => onerror(err));
 
 // unzips and makes path.txt point at the correct executable
 function extractFile (zipPath) {
@@ -52,17 +56,17 @@ function onerror (err) {
 }
 
 function getPlatformPath () {
-    const platform = process.env.npm_config_platform || os.platform()
+    const platform = process.env.npm_config_platform || os.platform();
 
     switch (platform) {
         case 'darwin':
-            return 'Electron.app/Contents/MacOS/Electron'
+            return 'Electron.app/Contents/MacOS/Electron';
         case 'freebsd':
         case 'openbsd':
         case 'linux':
-            return 'electron'
+            return 'electron';
         case 'win32':
-            return 'electron.exe'
+            return 'electron.exe';
         default:
             throw new Error('Electron builds are not available on platform: ' + platform)
     }
