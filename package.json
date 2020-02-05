@@ -1,0 +1,28 @@
+{
+  "name": "electronite",
+  "version": "6.0.7",
+  "description": "Electron with graphite",
+  "bin": {
+    "electronite": "cli.js"
+  },
+  "main": "index.js",
+  "types": "electron.d.ts",
+  "dependencies": {
+    "@electron/get": "^1.7.2",
+    "@types/node": "^13.7.0",
+    "extract-zip": "^1.6.7"
+  },
+  "scripts": {
+    "postinstall": "node install.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">= 4.0"
+  },
+  "author": "unfoldingWord",
+  "license": "MIT",
+  "keywords": [
+    "electron",
+    "graphite"
+  ]
+}
