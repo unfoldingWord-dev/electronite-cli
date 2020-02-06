@@ -14,3 +14,15 @@ When a new version of this package is released, the corresponding version of `el
 needs to be copied from https://github.com/electron/electron/releases.
 E.g. for version `6.0.7` of this package we downloaded `electron.d.ts` from https://github.com/electron/electron/releases/tag/v6.0.7.
 
+Then you must edit `electron.d.ts` to declare the `electronite` module.
+
+```typescript
+// line 10542
+declare module 'electronite' {
+  export = Electron;
+}
+
+interface NodeRequireFunction {
+  (moduleName: 'electronite'): typeof Electron;
+}
+```

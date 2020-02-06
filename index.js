@@ -15,4 +15,12 @@ function getElectronPath() {
     }
 }
 
-module.exports = getElectronPath();
+
+// Return the electron package when running in the electron environment.
+// Otherwise, return the path so we can run the binary.
+// This enables using require("electronite") within the code.
+try {
+    module.exports = require('electron');
+} catch (e) {
+    module.exports = getElectronPath();
+}

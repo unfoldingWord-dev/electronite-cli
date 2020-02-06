@@ -10539,12 +10539,12 @@ declare namespace Electron {
 
 }
 
-declare module 'electron' {
+declare module 'electronite' {
   export = Electron;
 }
 
 interface NodeRequireFunction {
-  (moduleName: 'electron'): typeof Electron;
+  (moduleName: 'electronite'): typeof Electron;
 }
 
 interface File {
