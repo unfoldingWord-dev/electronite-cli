@@ -8,6 +8,38 @@ that provides an enhanced font rendering system.
 
 > Graphite is a "smart font" system developed specifically to handle the complexities of lesser-known languages of the world.
 
+## Usage
+
+In your package.json
+```josn
+{
+    "scripts": {
+        "start": "electronite ."
+    }
+}
+```
+
+In your javascript
+```js
+const {...} = require("electronite");
+```
+
+### A Note About Importing
+It's important to note that when you use `require("electron")`,
+you aren't importing code from your dependencies but from the electron runtime.
+So, even when you have only installed electronite you can still use `require("electron")`.
+However, since electron isn't installed you won't have the typings, so your IDE's auto-complete won't work.
+
+Using `require("electronite")` provides the proper typings so auto-complete will work.
+It also makes more sense from a developer perspective.
+However, in order for the application to work,
+electronite automatically returns the real electron package when available from the runtime.
+
+All of this is to say that `electronite` **must** be installed as a dependency, not a dev-dependency.
+The downside is that now there's potentially a large binary in your production code (depending on your build process).
+If you are using webpack to build your application before compiling the electronite application,
+this won't be a problem because webpack should automatically exclude the binary.
+
 ## Development
 
 When a new version of this package is released, the corresponding version of `electron.d.ts`
