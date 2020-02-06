@@ -25,5 +25,14 @@
     "electron",
     "graphite",
     "electronite"
-  ]
+  ],
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unfoldingWord-dev/electronite-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/unfoldingWord-dev/electronite-cli/issues"
+  },
+  "homepage": "https://github.com/unfoldingWord-dev/electronite-cli#readme"
 }
