@@ -64,3 +64,7 @@ interface NodeRequireFunction {
   (moduleName: 'electronite'): typeof Electron;
 }
 ```
+Then you need to update the version of this package in `package.json` to match the version of electronite that you are supporting.
+It is important that the version matches exactly.
+An easy way to make sure you are setting the correct version is to look inside `electron.d.ts` and make sure the version indicated at the top of that file
+is the same as the one in `package.json`.
