@@ -8,16 +8,15 @@
   "main": "index.js",
   "types": "electron.d.ts",
   "dependencies": {
-    "@electron/get": "^1.7.2",
-    "@types/node": "^13.7.0",
-    "extract-zip": "^1.6.7"
+    "@electron/get": "^1.0.1",
+    "@types/node": "^14.6.2",
+    "extract-zip": "^1.0.3"
   },
   "scripts": {
-    "postinstall": "node install.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postinstall": "node install.js"
   },
   "engines": {
-    "node": ">= 4.0"
+    "node": ">= 8.6"
   },
   "author": "unfoldingWord",
   "license": "MIT",

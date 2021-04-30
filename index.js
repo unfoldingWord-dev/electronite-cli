@@ -1,11 +1,11 @@
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 
-var pathFile = path.join(__dirname, 'path.txt');
+const pathFile = path.join(__dirname, 'path.txt');
 
 function getElectronPath() {
     if (fs.existsSync(pathFile)) {
-        var executablePath = fs.readFileSync(pathFile, 'utf-8');
+        const executablePath = fs.readFileSync(pathFile, 'utf-8');
         if (process.env.ELECTRON_OVERRIDE_DIST_PATH) {
             return path.join(process.env.ELECTRON_OVERRIDE_DIST_PATH, executablePath)
         }
@@ -16,9 +16,9 @@ function getElectronPath() {
 }
 
 
-// Return the electron package when running in the electron environment.
-// Otherwise, return the path so we can run the binary.
-// This enables using require("electronite") within the code.
+// TRICKY: Return the built-in electron package when running in the electron environment.
+//  Otherwise, return the path so we can run the binary.
+//  This enables using require("electronite") within the code.
 try {
     module.exports = require('electron');
 } catch (e) {
