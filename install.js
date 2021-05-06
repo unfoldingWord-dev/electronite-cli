@@ -18,14 +18,17 @@ if (isInstalled()) {
     process.exit(0);
 }
 
+const platform = process.env.npm_config_platform || process.platform;
+const arch = process.env.npm_config_arch || process.arch;
+
 // downloads if not cached
 downloadArtifact({
     version,
     artifactName: 'electron',
     force: process.env.force_no_cache === 'true',
     cacheRoot: process.env.electron_config_cache,
-    platform: process.env.npm_config_platform || process.platform,
-    arch: process.env.npm_config_arch || process.arch,
+    platform,
+    arch,
     // electronite specific configuration
     unsafelyDisableChecksums: true,
     mirrorOptions: {
