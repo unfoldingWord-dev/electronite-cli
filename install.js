@@ -19,7 +19,12 @@ if (isInstalled()) {
 }
 
 const platform = process.env.npm_config_platform || process.platform;
-const arch = process.env.npm_config_arch || process.arch;
+let arch = process.env.npm_config_arch || process.arch;
+
+if ((platform === 'darwin') && (arch === 'arm64')) {
+  console.log('On macOS arm - switching to load x64 binary');
+  arch = 'x64';
+}
 
 // downloads if not cached
 downloadArtifact({
