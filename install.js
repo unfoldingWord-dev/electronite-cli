@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-const { version } = require('./package');
+// const { version } = require('./package');
+const version = '17.3.1-graphite'; // TODO: temporary hack for testing
 
 const fs = require('fs');
 const os = require('os');
@@ -32,8 +33,8 @@ downloadArtifact({
     // electronite specific configuration
     unsafelyDisableChecksums: true,
     mirrorOptions: {
-        mirror: 'https://github.com/unfoldingWord-dev/electronite/releases/download/',
-        customDir: 'v' + version + '-graphite',
+        mirror: 'https://github.com/unfoldingWord/electronite/releases/download/',
+        customDir: 'v' + version,
         customFilename: 'electronite-v' + version + '-' + platform + '-' + arch + '.zip'
     }
 }).then(extractFile).catch(err => {
