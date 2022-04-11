@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-// const { version } = require('./package');
-const version = '17.3.1-graphite'; // TODO: temporary hack for testing
+const { version } = require('./package');
 
 const fs = require('fs');
 const os = require('os');
@@ -23,6 +22,14 @@ const platform = process.env.npm_config_platform || process.platform;
 const arch = process.env.npm_config_arch || process.arch;
 
 // downloads if not cached
+const electroniteRepoUrl = 'https://github.com/unfoldingWord/electronite/releases/download/';
+const electroniteVersion = 'v' + version;
+const artifactName = 'electronite-v' + version + '-' + platform + '-' + arch + '.zip';
+console.log('Downloading Electronite if not loaded: ');
+console.log('electroniteRepoUrl:', electroniteRepoUrl);
+console.log('electroniteVersion:', electroniteVersion);
+console.log('artifactName:', artifactName);
+
 downloadArtifact({
     version,
     artifactName: 'electron',
@@ -33,9 +40,9 @@ downloadArtifact({
     // electronite specific configuration
     unsafelyDisableChecksums: true,
     mirrorOptions: {
-        mirror: 'https://github.com/unfoldingWord/electronite/releases/download/',
-        customDir: 'v' + version,
-        customFilename: 'electronite-v' + version + '-' + platform + '-' + arch + '.zip'
+        mirror: electroniteRepoUrl,
+        customDir: electroniteVersion,
+        customFilename: artifactName
     }
 }).then(extractFile).catch(err => {
     console.error(err.stack);
