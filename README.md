@@ -55,13 +55,35 @@ E.g. for version `6.0.7` of this package we downloaded `electron.d.ts` from http
 Then you must edit `electron.d.ts` to declare the `electronite` module.
 
 ```typescript
-// line 10542
+// line 17536
 declare module 'electronite' {
-  export = Electron;
+    export = Electron.CrossProcessExports;
+}
+
+declare module 'electronite/main' {
+    export = Electron.Main
+}
+
+declare module 'electronite/common' {
+    export = Electron.Common
+}
+
+declare module 'electronite/renderer' {
+    export = Electron.Renderer
 }
 
 interface NodeRequireFunction {
-  (moduleName: 'electronite'): typeof Electron;
+    (moduleName: 'electronite'): typeof Electron.CrossProcessExports;
+    (moduleName: 'electronite/main'): typeof Electron.Main;
+    (moduleName: 'electronite/common'): typeof Electron.Common;
+    (moduleName: 'electronite/renderer'): typeof Electron.Renderer;
+}
+
+interface NodeRequire {
+    (moduleName: 'electronite'): typeof Electron.CrossProcessExports;
+    (moduleName: 'electronite/main'): typeof Electron.Main;
+    (moduleName: 'electronite/common'): typeof Electron.Common;
+    (moduleName: 'electronite/renderer'): typeof Electron.Renderer;
 }
 ```
 Then you need to update the version of this package in `package.json` to match the version of electronite that you are supporting.
