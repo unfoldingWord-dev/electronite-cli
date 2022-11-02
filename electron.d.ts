@@ -1,4 +1,4 @@
-// Type definitions for Electron 18.2.1
+// Type definitions for Electron 19.1.3
 // Project: http://electronjs.org/
 // Definitions by: The Electron Team <https://github.com/electron/electron>
 // Definitions: https://github.com/electron/electron-typescript-definitions
@@ -315,35 +315,6 @@ declare namespace Electron {
     addListener(event: 'did-become-active', listener: (event: Event) => void): this;
     removeListener(event: 'did-become-active', listener: (event: Event) => void): this;
     /**
-     * This event will be emitted within the second instance during the call to
-     * `app.requestSingleInstanceLock()`, when the first instance calls the
-     * `ackCallback` provided by the `second-instance` event handler.
-     */
-    on(event: 'first-instance-ack', listener: (event: Event,
-                                               /**
-                                                * A JSON object of additional data passed from the first instance, in response to
-                                                * the first instance's `second-instance` event.
-                                                */
-                                               additionalData: unknown) => void): this;
-    once(event: 'first-instance-ack', listener: (event: Event,
-                                               /**
-                                                * A JSON object of additional data passed from the first instance, in response to
-                                                * the first instance's `second-instance` event.
-                                                */
-                                               additionalData: unknown) => void): this;
-    addListener(event: 'first-instance-ack', listener: (event: Event,
-                                               /**
-                                                * A JSON object of additional data passed from the first instance, in response to
-                                                * the first instance's `second-instance` event.
-                                                */
-                                               additionalData: unknown) => void): this;
-    removeListener(event: 'first-instance-ack', listener: (event: Event,
-                                               /**
-                                                * A JSON object of additional data passed from the first instance, in response to
-                                                * the first instance's `second-instance` event.
-                                                */
-                                               additionalData: unknown) => void): this;
-    /**
      * Emitted whenever there is a GPU info update.
      */
     on(event: 'gpu-info-update', listener: Function): this;
@@ -528,19 +499,6 @@ declare namespace Electron {
      * **Note:** If the second instance is started by a different user than the first,
      * the `argv` array will not include the arguments.
      *
-     * **Note:** `ackCallback` allows the user to send data back to the second instance
-     * during the `app.requestSingleInstanceLock()` flow. This callback can be used for
-     * cases where the second instance needs to obtain additional information from the
-     * first instance before quitting.
-     *
-     * Currently, the limit on the message size is kMaxMessageLength, or around 32kB.
-     * To be safe, keep the amount of data passed to 31kB at most.
-     *
-     * In order to call the callback, `event.preventDefault()` must be called, first.
-     * If the callback is not called in either case, `null` will be sent back. If
-     * `event.preventDefault()` is not called, but `ackCallback` is called by the user
-     * in the event, then the behaviour is undefined.
-     *
      * This event is guaranteed to be emitted after the `ready` event of `app` gets
      * emitted.
      *
@@ -559,11 +517,7 @@ declare namespace Electron {
                                             /**
                                              * A JSON object of additional data passed from the second instance
                                              */
-                                            additionalData: unknown,
-                                            /**
-                                             * A function that can be used to send data back to the second instance
-                                             */
-                                            ackCallback: unknown) => void): this;
+                                            additionalData: unknown) => void): this;
     once(event: 'second-instance', listener: (event: Event,
                                             /**
                                              * An array of the second instance's command line arguments
@@ -576,11 +530,7 @@ declare namespace Electron {
                                             /**
                                              * A JSON object of additional data passed from the second instance
                                              */
-                                            additionalData: unknown,
-                                            /**
-                                             * A function that can be used to send data back to the second instance
-                                             */
-                                            ackCallback: unknown) => void): this;
+                                            additionalData: unknown) => void): this;
     addListener(event: 'second-instance', listener: (event: Event,
                                             /**
                                              * An array of the second instance's command line arguments
@@ -593,11 +543,7 @@ declare namespace Electron {
                                             /**
                                              * A JSON object of additional data passed from the second instance
                                              */
-                                            additionalData: unknown,
-                                            /**
-                                             * A function that can be used to send data back to the second instance
-                                             */
-                                            ackCallback: unknown) => void): this;
+                                            additionalData: unknown) => void): this;
     removeListener(event: 'second-instance', listener: (event: Event,
                                             /**
                                              * An array of the second instance's command line arguments
@@ -610,11 +556,7 @@ declare namespace Electron {
                                             /**
                                              * A JSON object of additional data passed from the second instance
                                              */
-                                            additionalData: unknown,
-                                            /**
-                                             * A function that can be used to send data back to the second instance
-                                             */
-                                            ackCallback: unknown) => void): this;
+                                            additionalData: unknown) => void): this;
     /**
      * Emitted when a client certificate is requested.
      *
@@ -2424,10 +2366,14 @@ declare namespace Electron {
     isMaximized(): boolean;
     /**
      * Whether menu bar automatically hides itself.
+     *
+     * @platform win32,linux
      */
     isMenuBarAutoHide(): boolean;
     /**
      * Whether the menu bar is visible.
+     *
+     * @platform win32,linux
      */
     isMenuBarVisible(): boolean;
     /**
@@ -2490,6 +2436,8 @@ declare namespace Electron {
      * Whether the window is visible on all workspaces.
      *
      * **Note:** This API always returns false on Windows.
+     *
+     * @platform darwin,linux
      */
     isVisibleOnAllWorkspaces(): boolean;
     /**
@@ -2638,6 +2586,8 @@ declare namespace Electron {
      *
      * If the menu bar is already visible, calling `setAutoHideMenuBar(true)` won't
      * hide it immediately.
+     *
+     * @platform win32,linux
      */
     setAutoHideMenuBar(hide: boolean): void;
     /**
@@ -2978,6 +2928,8 @@ declare namespace Electron {
      * Sets whether the window should be visible on all workspaces.
      *
      * **Note:** This API does nothing on Windows.
+     *
+     * @platform darwin,linux
      */
     setVisibleOnAllWorkspaces(visible: boolean, options?: VisibleOnAllWorkspacesOptions): void;
     /**
@@ -3043,6 +2995,8 @@ declare namespace Electron {
      * by user.
      *
      * On Linux the setter is a no-op, although the getter returns `true`.
+     *
+     * @platform darwin,win32
      */
     closable: boolean;
     /**
@@ -3091,6 +3045,8 @@ declare namespace Electron {
      * maximized by user.
      *
      * On Linux the setter is a no-op, although the getter returns `true`.
+     *
+     * @platform darwin,win32
      */
     maximizable: boolean;
     /**
@@ -3107,12 +3063,16 @@ declare namespace Electron {
      * minimized by user.
      *
      * On Linux the setter is a no-op, although the getter returns `true`.
+     *
+     * @platform darwin,win32
      */
     minimizable: boolean;
     /**
      * A `boolean` property that determines Whether the window can be moved by user.
      *
      * On Linux the setter is a no-op, although the getter returns `true`.
+     *
+     * @platform darwin,win32
      */
     movable: boolean;
     /**
@@ -3148,6 +3108,8 @@ declare namespace Electron {
      * workspaces.
      *
      * **Note:** Always returns false on Windows.
+     *
+     * @platform darwin,linux
      */
     visibleOnAllWorkspaces: boolean;
     /**
@@ -7067,9 +7029,9 @@ declare namespace Electron {
     /**
      * Whether encryption is available.
      *
-     * On Linux, returns true if the secret key is available. On MacOS, returns true if
-     * Keychain is available. On Windows, returns true once the app has emitted the
-     * `ready` event.
+     * On Linux, returns true if the app has emitted the `ready` event and the secret
+     * key is available. On MacOS, returns true if Keychain is available. On Windows,
+     * returns true once the app has emitted the `ready` event.
      */
     isEncryptionAvailable(): boolean;
   }
@@ -7769,10 +7731,10 @@ declare namespace Electron {
      */
     getSpellCheckerLanguages(): string[];
     /**
-     * A `string | null` indicating the absolute file system path where data for this
-     * session is persisted on disk.  For in memory sessions this returns `null`.
+     * The absolute file system path where data for this session is persisted on disk.
+     * For in memory sessions this returns `null`.
      */
-    getStoragePath(): void;
+    getStoragePath(): (string) | (null);
     /**
      * The user agent for this session.
      */
@@ -8548,7 +8510,7 @@ declare namespace Electron {
      *
      * @platform darwin
      */
-    setUserDefault(key: string, type: 'string' | 'boolean' | 'integer' | 'float' | 'double' | 'url' | 'array' | 'dictionary', value: string): void;
+    setUserDefault<Type extends keyof UserDefaultTypes>(key: string, type: Type, value: UserDefaultTypes[Type]): void;
     /**
      * The ID of this subscription
      *
@@ -9662,7 +9624,8 @@ declare namespace Electron {
      */
     static getAllWebContents(): WebContents[];
     /**
-     * The web contents that is focused in this application, otherwise returns `null`.
+     * | null - The web contents that is focused in this application, otherwise returns
+     * `null`.
      */
     static getFocusedWebContents(): WebContents;
     /**
@@ -10775,9 +10738,6 @@ declare namespace Electron {
      * This event can be used to configure `webPreferences` for the `webContents` of a
      * `<webview>` before it's loaded, and provides the ability to set settings that
      * can't be set via `<webview>` attributes.
-     *
-     * **Note:** The specified `preload` script option will appear as `preloadURL` (not
-     * `preload`) in the `webPreferences` object emitted with this event.
      */
     on(event: 'will-attach-webview', listener: (event: Event,
                                                 /**
@@ -11271,6 +11231,9 @@ declare namespace Electron {
      *
      * When `contents` is a `<webview>` tag, the `mode` would be `detach` by default,
      * explicitly passing an empty `mode` can force using last used dock state.
+     *
+     * On Windows, if Windows Control Overlay is enabled, Devtools will be opened with
+     * `mode: 'detach'`.
      */
     openDevTools(options?: OpenDevToolsOptions): void;
     /**
@@ -11716,6 +11679,19 @@ declare namespace Electron {
      * specified.
      */
     setIsolatedWorldInfo(worldId: number, info: Info): void;
+    /**
+     * Sets a provider for spell checking in input fields and text areas.
+     *
+     * If you want to use this method you must disable the builtin spellchecker when
+     * you construct the window.
+     *
+     * The `provider` must be an object that has a `spellCheck` method that accepts an
+     * array of individual words for spellchecking. The `spellCheck` function runs
+     * asynchronously and calls the `callback` function with an array of misspelt words
+     * when complete.
+     *
+     * An example of using node-spellchecker as provider:
+     */
     setSpellCheckProvider(language: string, provider: Provider): void;
     /**
      * Sets the maximum and minimum pinch-to-zoom level.
@@ -11835,10 +11811,9 @@ declare namespace Electron {
     reload(): boolean;
     /**
      * Send an asynchronous message to the renderer process via `channel`, along with
-     * arguments. Arguments will be serialized with the [Structured Clone
-     * Algorithm][SCA], just like [`postMessage`][], so prototype chains will not be
-     * included. Sending Functions, Promises, Symbols, WeakMaps, or WeakSets will throw
-     * an exception.
+     * arguments. Arguments will be serialized with the Structured Clone Algorithm,
+     * just like `postMessage`, so prototype chains will not be included. Sending
+     * Functions, Promises, Symbols, WeakMaps, or WeakSets will throw an exception.
      *
      * The renderer process can handle the message by listening to `channel` with the
      * `ipcRenderer` module.
@@ -11868,6 +11843,16 @@ declare namespace Electron {
      *
      */
     readonly name: string;
+    /**
+     * A `string` representing the current origin of the frame, serialized according to
+     * RFC 6454. This may be different from the URL. For instance, if the frame is a
+     * child window opened to `about:blank`, then `frame.origin` will return the parent
+     * frame's origin, while `frame.url` will return the empty string. Pages without a
+     * scheme/host/port triple origin will have the serialized origin of `"null"` (that
+     * is, the string containing the letters n, u, l, l).
+     *
+     */
+    readonly origin: string;
     /**
      * An `Integer` representing the operating system `pid` of the process which owns
      * this frame.
@@ -12620,9 +12605,6 @@ declare namespace Electron {
      * When the guest page doesn't have node integration this script will still have
      * access to all Node APIs, but global objects injected by Node will be deleted
      * after this script has finished executing.
-     *
-     * **Note:** This option will appear as `preloadURL` (not `preload`) in the
-     * `webPreferences` specified to the `will-attach-webview` event.
      */
     preload: string;
     /**
@@ -12876,7 +12858,7 @@ declare namespace Electron {
      */
     useContentSize?: boolean;
     /**
-     * Show window in the center of the screen.
+     * Show window in the center of the screen. Default is `false`.
      */
     center?: boolean;
     /**
@@ -12901,20 +12883,28 @@ declare namespace Electron {
     resizable?: boolean;
     /**
      * Whether window is movable. This is not implemented on Linux. Default is `true`.
+     *
+     * @platform darwin,win32
      */
     movable?: boolean;
     /**
      * Whether window is minimizable. This is not implemented on Linux. Default is
      * `true`.
+     *
+     * @platform darwin,win32
      */
     minimizable?: boolean;
     /**
      * Whether window is maximizable. This is not implemented on Linux. Default is
      * `true`.
+     *
+     * @platform darwin,win32
      */
     maximizable?: boolean;
     /**
      * Whether window is closable. This is not implemented on Linux. Default is `true`.
+     *
+     * @platform darwin,win32
      */
     closable?: boolean;
     /**
@@ -12942,10 +12932,14 @@ declare namespace Electron {
     fullscreenable?: boolean;
     /**
      * Use pre-Lion fullscreen on macOS. Default is `false`.
+     *
+     * @platform darwin
      */
     simpleFullscreen?: boolean;
     /**
      * Whether to show the window in taskbar. Default is `false`.
+     *
+     * @platform darwin,win32
      */
     skipTaskbar?: boolean;
     /**
@@ -12990,6 +12984,8 @@ declare namespace Electron {
     /**
      * Whether clicking an inactive window will also click through to the web contents.
      * Default is `false` on macOS. This option is not configurable on other platforms.
+     *
+     * @platform darwin
      */
     acceptFirstMouse?: boolean;
     /**
@@ -13003,6 +12999,8 @@ declare namespace Electron {
     /**
      * Enable the window to be resized larger than screen. Only relevant for macOS, as
      * other OSes allow larger-than-screen windows by default. Default is `false`.
+     *
+     * @platform darwin
      */
     enableLargerThanScreen?: boolean;
     /**
@@ -13019,6 +13017,8 @@ declare namespace Electron {
     /**
      * Set the initial opacity of the window, between 0.0 (fully transparent) and 1.0
      * (fully opaque). This is only implemented on Windows and macOS.
+     *
+     * @platform darwin,win32
      */
     opacity?: number;
     /**
@@ -13038,6 +13038,8 @@ declare namespace Electron {
     /**
      * Specify how the material appearance should reflect window activity state on
      * macOS. Must be used with the `vibrancy` property. Possible values are:
+     *
+     * @platform darwin
      */
     visualEffectState?: ('followWindow' | 'active' | 'inactive');
     /**
@@ -13048,11 +13050,16 @@ declare namespace Electron {
     titleBarStyle?: ('default' | 'hidden' | 'hiddenInset' | 'customButtonsOnHover');
     /**
      * Set a custom position for the traffic light buttons in frameless windows.
+     *
+     * @platform darwin
      */
     trafficLightPosition?: Point;
     /**
      * Whether frameless window should have rounded corners on macOS. Default is
-     * `true`.
+     * `true`. Setting this property to `false` will prevent the window from being
+     * fullscreenable.
+     *
+     * @platform darwin
      */
     roundedCorners?: boolean;
     /**
@@ -13060,6 +13067,7 @@ declare namespace Electron {
      * titleBarStyle. Default is `false`.
      *
      * @deprecated
+     * @platform darwin
      */
     fullscreenWindowTitle?: boolean;
     /**
@@ -13075,6 +13083,8 @@ declare namespace Electron {
      * `fullscreen-ui`, `tooltip`, `content`, `under-window`, or `under-page`. Please
      * note that `appearance-based`, `light`, `dark`, `medium-light`, and `ultra-dark`
      * are deprecated and have been removed in macOS Catalina (10.15).
+     *
+     * @platform darwin
      */
     vibrancy?: ('appearance-based' | 'light' | 'dark' | 'titlebar' | 'selection' | 'menu' | 'popover' | 'sidebar' | 'medium-light' | 'ultra-dark' | 'header' | 'sheet' | 'window' | 'hud' | 'fullscreen-ui' | 'tooltip' | 'content' | 'under-window' | 'under-page');
     /**
@@ -13083,6 +13093,8 @@ declare namespace Electron {
      * will grow to the preferred width of the web page when zoomed, `false` will cause
      * it to zoom to the width of the screen. This will also affect the behavior when
      * calling `maximize()` directly. Default is `false`.
+     *
+     * @platform darwin
      */
     zoomToPageWidth?: boolean;
     /**
@@ -13090,6 +13102,8 @@ declare namespace Electron {
      * Windows with the same tabbing identifier will be grouped together. This also
      * adds a native new tab button to your window's tab bar and allows your `app` and
      * window to receive the `new-window-for-tab` event.
+     *
+     * @platform darwin
      */
     tabbingIdentifier?: string;
     /**
@@ -16240,6 +16254,8 @@ declare namespace Electron {
     experimentalFeatures?: boolean;
     /**
      * Enables scroll bounce (rubber banding) effect on macOS. Default is `false`.
+     *
+     * @platform darwin
      */
     scrollBounce?: boolean;
     /**
@@ -17550,17 +17566,17 @@ declare module 'electronite/renderer' {
 }
 
 interface NodeRequireFunction {
-    (moduleName: 'electronite'): typeof Electron.CrossProcessExports;
-    (moduleName: 'electronite/main'): typeof Electron.Main;
-    (moduleName: 'electronite/common'): typeof Electron.Common;
-    (moduleName: 'electronite/renderer'): typeof Electron.Renderer;
+  (moduleName: 'electronite'): typeof Electron.CrossProcessExports;
+  (moduleName: 'electronite/main'): typeof Electron.Main;
+  (moduleName: 'electronite/common'): typeof Electron.Common;
+  (moduleName: 'electronite/renderer'): typeof Electron.Renderer;
 }
 
 interface NodeRequire {
-    (moduleName: 'electronite'): typeof Electron.CrossProcessExports;
-    (moduleName: 'electronite/main'): typeof Electron.Main;
-    (moduleName: 'electronite/common'): typeof Electron.Common;
-    (moduleName: 'electronite/renderer'): typeof Electron.Renderer;
+  (moduleName: 'electronite'): typeof Electron.CrossProcessExports;
+  (moduleName: 'electronite/main'): typeof Electron.Main;
+  (moduleName: 'electronite/common'): typeof Electron.Common;
+  (moduleName: 'electronite/renderer'): typeof Electron.Renderer;
 }
 
 interface File {
