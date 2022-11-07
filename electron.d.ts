@@ -1,4 +1,4 @@
-// Type definitions for Electron 19.1.3
+// Type definitions for Electron 21.2.0
 // Project: http://electronjs.org/
 // Definitions by: The Electron Team <https://github.com/electron/electron>
 // Definitions: https://github.com/electron/electron-typescript-definitions
@@ -409,6 +409,11 @@ declare namespace Electron {
      * `CFBundleURLTypes` key, and set `NSPrincipalClass` to `AtomApplication`.
      *
      * You should call `event.preventDefault()` if you want to handle this event.
+     *
+     * As with the `open-file` event, be sure to register a listener for the `open-url`
+     * event early in your application startup to detect if the the application being
+     * is being opened to handle a URL. If you register the listener in response to a
+     * `ready` event, you'll miss URLs that trigger the launch of your application.
      *
      * @platform darwin
      */
@@ -889,7 +894,7 @@ declare namespace Electron {
      * **Note:** When distributing your packaged app, you have to also ship the
      * `locales` folder.
      *
-     * **Note:** On Windows, you have to call it after the `ready` events gets emitted.
+     * **Note:** This API must be called after the `ready` event is emitted.
      */
     getLocale(): string;
     /**
@@ -952,7 +957,14 @@ declare namespace Electron {
      * called first, a default log directory will be created equivalent to calling
      * `app.setAppLogsPath()` without a `path` parameter.
      */
-    getPath(name: 'home' | 'appData' | 'userData' | 'cache' | 'temp' | 'exe' | 'module' | 'desktop' | 'documents' | 'downloads' | 'music' | 'pictures' | 'videos' | 'recent' | 'logs' | 'crashDumps'): string;
+    getPath(name: 'home' | 'appData' | 'userData' | 'sessionData' | 'temp' | 'exe' | 'module' | 'desktop' | 'documents' | 'downloads' | 'music' | 'pictures' | 'videos' | 'recent' | 'logs' | 'crashDumps'): string;
+    /**
+     * The current system locale. On Windows and Linux, it is fetched using Chromium's
+     * `i18n` library. On macOS, the `NSLocale` object is used instead.
+     *
+     * **Note:** This API must be called after the `ready` event is emitted.
+     */
+    getSystemLocale(): string;
     /**
      * The version of the loaded application. If no version is found in the
      * application's `package.json` file, the version of the current bundle or
@@ -1015,6 +1027,13 @@ declare namespace Electron {
      */
     isEmojiPanelSupported(): boolean;
     /**
+     * `true` if the application—including all of its windows—is hidden (e.g. with
+     * `Command-H`), `false` otherwise.
+     *
+     * @platform darwin
+     */
+    isHidden(): boolean;
+    /**
      * Whether the application is currently running from the systems Application
      * folder. Use in combination with `app.moveToApplicationsFolder()`
      *
@@ -1055,7 +1074,7 @@ declare namespace Electron {
      *
      * By default, if an app of the same name as the one being moved exists in the
      * Applications directory and is _not_ running, the existing app will be trashed
-     * and the active app moved into its place. If it _is_ running, the pre-existing
+     * and the active app moved into its place. If it _is_ running, the preexisting
      * running app will assume focus and the previously active app will quit itself.
      * This behavior can be changed by providing the optional conflict handler, where
      * the boolean returned by the handler determines whether or not the move conflict
@@ -1298,9 +1317,9 @@ declare namespace Electron {
      *
      * You can only override paths of a `name` defined in `app.getPath`.
      *
-     * By default, web pages' cookies and caches will be stored under the `userData`
+     * By default, web pages' cookies and caches will be stored under the `sessionData`
      * directory. If you want to change this location, you have to override the
-     * `userData` path before the `ready` event of the `app` module is emitted.
+     * `sessionData` path before the `ready` event of the `app` module is emitted.
      */
     setPath(name: string, path: string): void;
     /**
@@ -2824,6 +2843,8 @@ declare namespace Electron {
     setSize(width: number, height: number, animate?: boolean): void;
     /**
      * Makes the window not show in the taskbar.
+     *
+     * @platform darwin,win32
      */
     setSkipTaskbar(skip: boolean): void;
     /**
@@ -6971,6 +6992,137 @@ declare namespace Electron {
     data: (string) | (Buffer);
   }
 
+  interface PushNotifications extends NodeJS.EventEmitter {
+
+    // Docs: https://electronjs.org/docs/api/push-notifications
+
+    /**
+     * Emitted when the app receives a remote notification while running. See:
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     * com/documentation/appkit/nsapplicationdelegate/1428430-application?language=objc
+     *
+     * @platform darwin
+     */
+    on(event: 'received-apns-notification', listener: (userInfo: Record<string, any>) => void): this;
+    once(event: 'received-apns-notification', listener: (userInfo: Record<string, any>) => void): this;
+    addListener(event: 'received-apns-notification', listener: (userInfo: Record<string, any>) => void): this;
+    removeListener(event: 'received-apns-notification', listener: (userInfo: Record<string, any>) => void): this;
+    /**
+     * Registers the app with Apple Push Notification service (APNS) to receive Badge,
+     * Sound, and Alert notifications. If registration is successful, the promise will
+     * be resolved with the APNS device token. Otherwise, the promise will be rejected
+     * with an error message. See:
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     * tion/appkit/nsapplication/1428476-registerforremotenotificationtyp?language=objc
+     *
+     * @platform darwin
+     */
+    registerForAPNSNotifications(): Promise<string>;
+    /**
+     * Unregisters the app from notifications received from APNS. See:
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     * tion/appkit/nsapplication/1428747-unregisterforremotenotifications?language=objc
+     *
+     * @platform darwin
+     */
+    unregisterForAPNSNotifications(): void;
+  }
+
   interface Rectangle {
 
     // Docs: https://electronjs.org/docs/api/structures/rectangle
@@ -7354,11 +7506,11 @@ declare namespace Electron {
     removeListener(event: 'extension-unloaded', listener: (event: Event,
                                                extension: Extension) => void): this;
     /**
-     * Emitted when a new HID device becomes available. For example, when a new USB
-     * device is plugged in.
-     *
-     * This event will only be emitted after `navigator.hid.requestDevice` has been
-     * called and `select-hid-device` has fired.
+     * Emitted after `navigator.hid.requestDevice` has been called and
+     * `select-hid-device` has fired if a new device becomes available before the
+     * callback from `select-hid-device` is called.  This event is intended for use
+     * when using a UI to ask users to pick a device so that the UI can be updated with
+     * the newly added device.
      */
     on(event: 'hid-device-added', listener: (event: Event,
                                              details: HidDeviceAddedDetails) => void): this;
@@ -7369,11 +7521,11 @@ declare namespace Electron {
     removeListener(event: 'hid-device-added', listener: (event: Event,
                                              details: HidDeviceAddedDetails) => void): this;
     /**
-     * Emitted when a HID device has been removed.  For example, this event will fire
-     * when a USB device is unplugged.
-     *
-     * This event will only be emitted after `navigator.hid.requestDevice` has been
-     * called and `select-hid-device` has fired.
+     * Emitted after `navigator.hid.requestDevice` has been called and
+     * `select-hid-device` has fired if a device has been removed before the callback
+     * from `select-hid-device` is called.  This event is intended for use when using a
+     * UI to ask users to pick a device so that the UI can be updated to remove the
+     * specified device.
      */
     on(event: 'hid-device-removed', listener: (event: Event,
                                                details: HidDeviceRemovedDetails) => void): this;
@@ -7383,6 +7535,19 @@ declare namespace Electron {
                                                details: HidDeviceRemovedDetails) => void): this;
     removeListener(event: 'hid-device-removed', listener: (event: Event,
                                                details: HidDeviceRemovedDetails) => void): this;
+    /**
+     * Emitted after `HIDDevice.forget()` has been called.  This event can be used to
+     * help maintain persistent storage of permissions when
+     * `setDevicePermissionHandler` is used.
+     */
+    on(event: 'hid-device-revoked', listener: (event: Event,
+                                               details: HidDeviceRevokedDetails) => void): this;
+    once(event: 'hid-device-revoked', listener: (event: Event,
+                                               details: HidDeviceRevokedDetails) => void): this;
+    addListener(event: 'hid-device-revoked', listener: (event: Event,
+                                               details: HidDeviceRevokedDetails) => void): this;
+    removeListener(event: 'hid-device-revoked', listener: (event: Event,
+                                               details: HidDeviceRevokedDetails) => void): this;
     /**
      * Emitted when a render process requests preconnection to a URL, generally due to
      * a resource hint.
@@ -7472,8 +7637,10 @@ declare namespace Electron {
                                                callback: (portId: string) => void) => void): this;
     /**
      * Emitted after `navigator.serial.requestPort` has been called and
-     * `select-serial-port` has fired if a new serial port becomes available.  For
-     * example, this event will fire when a new USB device is plugged in.
+     * `select-serial-port` has fired if a new serial port becomes available before the
+     * callback from `select-serial-port` is called.  This event is intended for use
+     * when using a UI to ask users to pick a port so that the UI can be updated with
+     * the newly added port.
      */
     on(event: 'serial-port-added', listener: (event: Event,
                                               port: SerialPort,
@@ -7489,8 +7656,10 @@ declare namespace Electron {
                                               webContents: WebContents) => void): this;
     /**
      * Emitted after `navigator.serial.requestPort` has been called and
-     * `select-serial-port` has fired if a serial port has been removed.  For example,
-     * this event will fire when a USB device is unplugged.
+     * `select-serial-port` has fired if a serial port has been removed before the
+     * callback from `select-serial-port` is called.  This event is intended for use
+     * when using a UI to ask users to pick a port so that the UI can be updated to
+     * remove the specified port.
      */
     on(event: 'serial-port-removed', listener: (event: Event,
                                                 port: SerialPort,
@@ -7727,7 +7896,8 @@ declare namespace Electron {
      * the current OS locale.  This setting is persisted across restarts.
      *
      * **Note:** On macOS the OS spellchecker is used and has its own list of
-     * languages.  This API is a no-op on macOS.
+     * languages. On macOS, this API will return whichever languages have been
+     * configured by the OS.
      */
     getSpellCheckerLanguages(): string[];
     /**
@@ -7803,6 +7973,17 @@ declare namespace Electron {
      */
     resolveProxy(url: string): Promise<string>;
     /**
+     * Sets a handler to respond to Bluetooth pairing requests. This handler allows
+     * developers to handle devices that require additional validation before pairing.
+     * When a handler is not defined, any pairing on Linux or Windows that requires
+     * additional validation will be automatically cancelled. macOS does not require a
+     * handler because macOS handles the pairing automatically.  To clear the handler,
+     * call `setBluetoothPairingHandler(null)`.
+     *
+     * @platform win32,linux
+     */
+    setBluetoothPairingHandler(handler: ((details: BluetoothPairingHandlerHandlerDetails, callback: (response: Response) => void) => void) | (null)): void;
+    /**
      * Sets the certificate verify proc for `session`, the `proc` will be called with
      * `proc(request, callback)` whenever a server certificate verification is
      * requested. Calling `callback(0)` accepts the certificate, calling `callback(-2)`
@@ -7833,10 +8014,10 @@ declare namespace Electron {
      * `navigator.hid.requestDevice`).  If this handler is not defined, the default
      * device permissions as granted through device selection (eg via
      * `navigator.hid.requestDevice`) will be used. Additionally, the default behavior
-     * of Electron is to store granted device permision through the lifetime of the
-     * corresponding WebContents.  If longer term storage is needed, a developer can
-     * store granted device permissions (eg when handling the `select-hid-device`
-     * event) and then read from that storage with `setDevicePermissionHandler`.
+     * of Electron is to store granted device permision in memory. If longer term
+     * storage is needed, a developer can store granted device permissions (eg when
+     * handling the `select-hid-device` event) and then read from that storage with
+     * `setDevicePermissionHandler`.
      */
     setDevicePermissionHandler(handler: ((details: DevicePermissionHandlerHandlerDetails) => boolean) | (null)): void;
     /**
@@ -9614,6 +9795,11 @@ declare namespace Electron {
      */
     static fromDevToolsTargetId(targetId: string): WebContents;
     /**
+     * | undefined - A WebContents instance with the given WebFrameMain, or `undefined`
+     * if there is no WebContents associated with the given WebFrameMain.
+     */
+    static fromFrame(frame: WebFrameMain): WebContents;
+    /**
      * | undefined - A WebContents instance with the given ID, or `undefined` if there
      * is no WebContents associated with the given ID.
      */
@@ -10320,6 +10506,9 @@ declare namespace Electron {
     /**
      * Emitted when the renderer process sends an asynchronous message via
      * `ipcRenderer.send()`.
+     *
+     * See also `webContents.ipc`, which provides an `IpcMain`-like interface for
+     * responding to IPC messages specifically from this WebContents.
      */
     on(event: 'ipc-message', listener: (event: Event,
                                         channel: string,
@@ -10336,6 +10525,9 @@ declare namespace Electron {
     /**
      * Emitted when the renderer process sends a synchronous message via
      * `ipcRenderer.sendSync()`.
+     *
+     * See also `webContents.ipc`, which provides an `IpcMain`-like interface for
+     * responding to IPC messages specifically from this WebContents.
      */
     on(event: 'ipc-message-sync', listener: (event: Event,
                                              channel: string,
@@ -11273,16 +11465,13 @@ declare namespace Electron {
     /**
      * Resolves with the generated PDF data.
      *
-     * Prints window's web page as PDF with Chromium's preview printing custom
-     * settings.
+     * Prints the window's web page as PDF.
      *
      * The `landscape` will be ignored if `@page` CSS at-rule is used in the web page.
      *
-     * By default, an empty `options` will be regarded as:
-     *
-     * Use `page-break-before: always;` CSS style to force to print to a new page.
-     *
      * An example of `webContents.printToPDF`:
+     *
+     * See Page.printToPdf for more information.
      */
     printToPDF(options: PrintToPDFOptions): Promise<Buffer>;
     /**
@@ -11542,11 +11731,47 @@ declare namespace Electron {
      */
     readonly id: number;
     /**
+     * An `IpcMain` scoped to just IPC messages sent from this WebContents.
+     *
+     * IPC messages sent with `ipcRenderer.send`, `ipcRenderer.sendSync` or
+     * `ipcRenderer.postMessage` will be delivered in the following order:
+     *
+     * * `contents.on('ipc-message')`
+     * * `contents.mainFrame.on(channel)`
+     * * `contents.ipc.on(channel)`
+     * * `ipcMain.on(channel)`
+     *
+     * Handlers registered with `invoke` will be checked in the following order. The
+     * first one that is defined will be called, the rest will be ignored.
+     *
+     * * `contents.mainFrame.handle(channel)`
+     * * `contents.handle(channel)`
+     * * `ipcMain.handle(channel)`
+     *
+     * A handler or event listener registered on the WebContents will receive IPC
+     * messages sent from any frame, including child frames. In most cases, only the
+     * main frame can send IPC messages. However, if the `nodeIntegrationInSubFrames`
+     * option is enabled, it is possible for child frames to send IPC messages also. In
+     * that case, handlers should check the `senderFrame` property of the IPC event to
+     * ensure that the message is coming from the expected frame. Alternatively,
+     * register handlers on the appropriate frame directly using the `WebFrameMain.ipc`
+     * interface.
+     *
+     */
+    readonly ipc: IpcMain;
+    /**
      * A `WebFrameMain` property that represents the top frame of the page's frame
      * hierarchy.
      *
      */
     readonly mainFrame: WebFrameMain;
+    /**
+     * A `WebFrameMain` property that represents the frame that opened this
+     * WebContents, either with open(), or by navigating a link with a target
+     * attribute.
+     *
+     */
+    readonly opener: WebFrameMain;
     /**
      * A `Session` used by this webContents.
      *
@@ -11839,6 +12064,32 @@ declare namespace Electron {
      */
     readonly frameTreeNodeId: number;
     /**
+     * An `IpcMain` instance scoped to the frame.
+     *
+     * IPC messages sent with `ipcRenderer.send`, `ipcRenderer.sendSync` or
+     * `ipcRenderer.postMessage` will be delivered in the following order:
+     *
+     * * `contents.on('ipc-message')`
+     * * `contents.mainFrame.on(channel)`
+     * * `contents.ipc.on(channel)`
+     * * `ipcMain.on(channel)`
+     *
+     * Handlers registered with `invoke` will be checked in the following order. The
+     * first one that is defined will be called, the rest will be ignored.
+     *
+     * * `contents.mainFrame.handle(channel)`
+     * * `contents.handle(channel)`
+     * * `ipcMain.handle(channel)`
+     *
+     * In most cases, only the main frame of a WebContents can send or receive IPC
+     * messages. However, if the `nodeIntegrationInSubFrames` option is enabled, it is
+     * possible for child frames to send and receive IPC messages also. The
+     * `WebContents.ipc` interface may be more convenient when
+     * `nodeIntegrationInSubFrames` is not enabled.
+     *
+     */
+    readonly ipc: IpcMain;
+    /**
      * A `string` representing the frame name.
      *
      */
@@ -11923,7 +12174,7 @@ declare namespace Electron {
      *
      * Some examples of valid `urls`:
      */
-    onBeforeRequest(filter: WebRequestFilter, listener: ((details: OnBeforeRequestListenerDetails, callback: (response: Response) => void) => void) | (null)): void;
+    onBeforeRequest(filter: WebRequestFilter, listener: ((details: OnBeforeRequestListenerDetails, callback: (response: CallbackResponse) => void) => void) | (null)): void;
     /**
      * The `listener` will be called with `listener(details, callback)` when a request
      * is about to occur.
@@ -11934,7 +12185,7 @@ declare namespace Electron {
      *
      * Some examples of valid `urls`:
      */
-    onBeforeRequest(listener: ((details: OnBeforeRequestListenerDetails, callback: (response: Response) => void) => void) | (null)): void;
+    onBeforeRequest(listener: ((details: OnBeforeRequestListenerDetails, callback: (response: CallbackResponse) => void) => void) | (null)): void;
     /**
      * The `listener` will be called with `listener(details, callback)` before sending
      * an HTTP request, once the request headers are available. This may occur after a
@@ -12687,7 +12938,7 @@ declare namespace Electron {
     /**
      * The scale factor to add the image representation for.
      */
-    scaleFactor: number;
+    scaleFactor?: number;
     /**
      * Defaults to 0. Required if a bitmap buffer is specified as `buffer`.
      */
@@ -12823,6 +13074,19 @@ declare namespace Electron {
      * Total allocated space in Kilobytes.
      */
     total: number;
+  }
+
+  interface BluetoothPairingHandlerHandlerDetails {
+    deviceId: string;
+    /**
+     * The type of pairing prompt being requested. One of the following values:
+     */
+    pairingKind: ('confirm' | 'confirmPin' | 'providePin');
+    frame: WebFrameMain;
+    /**
+     * The pin value to verify if `pairingKind` is `confirmPin`.
+     */
+    pin?: string;
   }
 
   interface BrowserViewConstructorOptions {
@@ -13119,6 +13383,15 @@ declare namespace Electron {
      * colors. Default is `false`.
      */
     titleBarOverlay?: (TitleBarOverlay) | (boolean);
+  }
+
+  interface CallbackResponse {
+    cancel?: boolean;
+    /**
+     * The original request is prevented from being sent or completed and is instead
+     * redirected to the given URL.
+     */
+    redirectURL?: string;
   }
 
   interface CertificateTrustDialogOptions {
@@ -13664,10 +13937,6 @@ declare namespace Electron {
      * the device that permission is being requested for.
      */
     device: (HIDDevice) | (SerialPort);
-    /**
-     * WebFrameMain checking the device permission.
-     */
-    frame: WebFrameMain;
   }
 
   interface DidChangeThemeColorEvent extends Event {
@@ -13933,6 +14202,14 @@ declare namespace Electron {
   interface HidDeviceRemovedDetails {
     device: HIDDevice[];
     frame: WebFrameMain;
+  }
+
+  interface HidDeviceRevokedDetails {
+    device: HIDDevice[];
+    /**
+     * The origin that the device has been revoked from.
+     */
+    origin?: string;
   }
 
   interface IgnoreMouseEventsOptions {
@@ -14994,39 +15271,51 @@ declare namespace Electron {
 
   interface PrintToPDFOptions {
     /**
-     * the header and footer for the PDF.
-     */
-    headerFooter?: Record<string, string>;
-    /**
-     * `true` for landscape, `false` for portrait.
+     * Paper orientation.`true` for landscape, `false` for portrait. Defaults to false.
      */
     landscape?: boolean;
     /**
-     * Specifies the type of margins to use. Uses 0 for default margin, 1 for no
-     * margin, and 2 for minimum margin. and `width` in microns.
+     * Whether to display header and footer. Defaults to false.
      */
-    marginsType?: number;
+    displayHeaderFooter?: boolean;
     /**
-     * The scale factor of the web page. Can range from 0 to 100.
-     */
-    scaleFactor?: number;
-    /**
-     * The page range to print. On macOS, only the first range is honored.
-     */
-    pageRanges?: Record<string, number>;
-    /**
-     * Specify page size of the generated PDF. Can be `A3`, `A4`, `A5`, `Legal`,
-     * `Letter`, `Tabloid` or an Object containing `height`
-     */
-    pageSize?: (string) | (Size);
-    /**
-     * Whether to print CSS backgrounds.
+     * Whether to print background graphics. Defaults to false.
      */
     printBackground?: boolean;
     /**
-     * Whether to print selection only.
+     * Scale of the webpage rendering. Defaults to 1.
      */
-    printSelectionOnly?: boolean;
+    scale?: number;
+    /**
+     * Specify page size of the generated PDF. Can be `A0`, `A1`, `A2`, `A3`, `A4`,
+     * `A5`, `A6`, `Legal`, `Letter`, `Tabloid`, `Ledger`, or an Object containing
+     * `height` and `width` in inches. Defaults to `Letter`.
+     */
+    pageSize?: (string) | (Size);
+    margins?: Margins;
+    /**
+     * Paper ranges to print, e.g., '1-5, 8, 11-13'. Defaults to the empty string,
+     * which means print all pages.
+     */
+    pageRanges?: string;
+    /**
+     * HTML template for the print header. Should be valid HTML markup with following
+     * classes used to inject printing values into them: `date` (formatted print date),
+     * `title` (document title), `url` (document location), `pageNumber` (current page
+     * number) and `totalPages` (total pages in the document). For example, `<span
+     * class=title></span>` would generate span containing the title.
+     */
+    headerTemplate?: string;
+    /**
+     * HTML template for the print footer. Should use the same format as the
+     * `headerTemplate`.
+     */
+    footerTemplate?: string;
+    /**
+     * Whether or not to prefer page size as defined by css. Defaults to false, in
+     * which case the content will be scaled to fit the paper size.
+     */
+    preferCSSPageSize?: boolean;
   }
 
   interface Privileges {
@@ -15153,12 +15442,18 @@ declare namespace Electron {
   }
 
   interface Response {
-    cancel?: boolean;
     /**
-     * The original request is prevented from being sent or completed and is instead
-     * redirected to the given URL.
+     * `false` should be passed in if the dialog is canceled. If the `pairingKind` is
+     * `confirm` or `confirmPin`, this value should indicate if the pairing is
+     * confirmed.  If the `pairingKind` is `providePin` the value should be `true` when
+     * a value is provided.
      */
-    redirectURL?: string;
+    confirmed: boolean;
+    /**
+     * When the `pairingKind` is `providePin` this value should be the required pin for
+     * the Bluetooth device.
+     */
+    pin?: (string) | (null);
   }
 
   interface Result {
@@ -15761,7 +16056,7 @@ declare namespace Electron {
     footer?: string;
     /**
      * Specify page size of the printed document. Can be `A3`, `A4`, `A5`, `Legal`,
-     * `Letter`, `Tabloid` or an Object containing `height`.
+     * `Letter`, `Tabloid` or an Object containing `height` and `width`.
      */
     pageSize?: (string) | (Size);
   }
@@ -15826,7 +16121,7 @@ declare namespace Electron {
     footer?: string;
     /**
      * Specify page size of the printed document. Can be `A3`, `A4`, `A5`, `Legal`,
-     * `Letter`, `Tabloid` or an Object containing `height`.
+     * `Letter`, `Tabloid` or an Object containing `height` in microns.
      */
     pageSize?: (string) | (Size);
   }
@@ -16439,6 +16734,7 @@ declare namespace Electron {
     powerMonitor: PowerMonitor;
     powerSaveBlocker: PowerSaveBlocker;
     protocol: Protocol;
+    pushNotifications: PushNotifications;
     safeStorage: SafeStorage;
     screen: Screen;
     session: typeof Session;
@@ -16473,8 +16769,10 @@ declare namespace Electron {
     type BeforeSendResponse = Electron.BeforeSendResponse;
     type BitmapOptions = Electron.BitmapOptions;
     type BlinkMemoryInfo = Electron.BlinkMemoryInfo;
+    type BluetoothPairingHandlerHandlerDetails = Electron.BluetoothPairingHandlerHandlerDetails;
     type BrowserViewConstructorOptions = Electron.BrowserViewConstructorOptions;
     type BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
+    type CallbackResponse = Electron.CallbackResponse;
     type CertificateTrustDialogOptions = Electron.CertificateTrustDialogOptions;
     type ClearCodeCachesOptions = Electron.ClearCodeCachesOptions;
     type ClearStorageDataOptions = Electron.ClearStorageDataOptions;
@@ -16517,6 +16815,7 @@ declare namespace Electron {
     type HeapStatistics = Electron.HeapStatistics;
     type HidDeviceAddedDetails = Electron.HidDeviceAddedDetails;
     type HidDeviceRemovedDetails = Electron.HidDeviceRemovedDetails;
+    type HidDeviceRevokedDetails = Electron.HidDeviceRevokedDetails;
     type IgnoreMouseEventsOptions = Electron.IgnoreMouseEventsOptions;
     type ImportCertificateOptions = Electron.ImportCertificateOptions;
     type Info = Electron.Info;
@@ -16729,6 +17028,8 @@ declare namespace Electron {
     type PowerSaveBlocker = Electron.PowerSaveBlocker;
     const protocol: Protocol;
     type Protocol = Electron.Protocol;
+    const pushNotifications: PushNotifications;
+    type PushNotifications = Electron.PushNotifications;
     const safeStorage: SafeStorage;
     type SafeStorage = Electron.SafeStorage;
     const screen: Screen;
@@ -16767,8 +17068,10 @@ declare namespace Electron {
     type BeforeSendResponse = Electron.BeforeSendResponse;
     type BitmapOptions = Electron.BitmapOptions;
     type BlinkMemoryInfo = Electron.BlinkMemoryInfo;
+    type BluetoothPairingHandlerHandlerDetails = Electron.BluetoothPairingHandlerHandlerDetails;
     type BrowserViewConstructorOptions = Electron.BrowserViewConstructorOptions;
     type BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
+    type CallbackResponse = Electron.CallbackResponse;
     type CertificateTrustDialogOptions = Electron.CertificateTrustDialogOptions;
     type ClearCodeCachesOptions = Electron.ClearCodeCachesOptions;
     type ClearStorageDataOptions = Electron.ClearStorageDataOptions;
@@ -16811,6 +17114,7 @@ declare namespace Electron {
     type HeapStatistics = Electron.HeapStatistics;
     type HidDeviceAddedDetails = Electron.HidDeviceAddedDetails;
     type HidDeviceRemovedDetails = Electron.HidDeviceRemovedDetails;
+    type HidDeviceRevokedDetails = Electron.HidDeviceRevokedDetails;
     type IgnoreMouseEventsOptions = Electron.IgnoreMouseEventsOptions;
     type ImportCertificateOptions = Electron.ImportCertificateOptions;
     type Info = Electron.Info;
@@ -16998,8 +17302,10 @@ declare namespace Electron {
     type BeforeSendResponse = Electron.BeforeSendResponse;
     type BitmapOptions = Electron.BitmapOptions;
     type BlinkMemoryInfo = Electron.BlinkMemoryInfo;
+    type BluetoothPairingHandlerHandlerDetails = Electron.BluetoothPairingHandlerHandlerDetails;
     type BrowserViewConstructorOptions = Electron.BrowserViewConstructorOptions;
     type BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
+    type CallbackResponse = Electron.CallbackResponse;
     type CertificateTrustDialogOptions = Electron.CertificateTrustDialogOptions;
     type ClearCodeCachesOptions = Electron.ClearCodeCachesOptions;
     type ClearStorageDataOptions = Electron.ClearStorageDataOptions;
@@ -17042,6 +17348,7 @@ declare namespace Electron {
     type HeapStatistics = Electron.HeapStatistics;
     type HidDeviceAddedDetails = Electron.HidDeviceAddedDetails;
     type HidDeviceRemovedDetails = Electron.HidDeviceRemovedDetails;
+    type HidDeviceRevokedDetails = Electron.HidDeviceRevokedDetails;
     type IgnoreMouseEventsOptions = Electron.IgnoreMouseEventsOptions;
     type ImportCertificateOptions = Electron.ImportCertificateOptions;
     type Info = Electron.Info;
@@ -17264,6 +17571,8 @@ declare namespace Electron {
     type PowerSaveBlocker = Electron.PowerSaveBlocker;
     const protocol: Protocol;
     type Protocol = Electron.Protocol;
+    const pushNotifications: PushNotifications;
+    type PushNotifications = Electron.PushNotifications;
     const safeStorage: SafeStorage;
     type SafeStorage = Electron.SafeStorage;
     const screen: Screen;
@@ -17306,8 +17615,10 @@ declare namespace Electron {
     type BeforeSendResponse = Electron.BeforeSendResponse;
     type BitmapOptions = Electron.BitmapOptions;
     type BlinkMemoryInfo = Electron.BlinkMemoryInfo;
+    type BluetoothPairingHandlerHandlerDetails = Electron.BluetoothPairingHandlerHandlerDetails;
     type BrowserViewConstructorOptions = Electron.BrowserViewConstructorOptions;
     type BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions;
+    type CallbackResponse = Electron.CallbackResponse;
     type CertificateTrustDialogOptions = Electron.CertificateTrustDialogOptions;
     type ClearCodeCachesOptions = Electron.ClearCodeCachesOptions;
     type ClearStorageDataOptions = Electron.ClearStorageDataOptions;
@@ -17350,6 +17661,7 @@ declare namespace Electron {
     type HeapStatistics = Electron.HeapStatistics;
     type HidDeviceAddedDetails = Electron.HidDeviceAddedDetails;
     type HidDeviceRemovedDetails = Electron.HidDeviceRemovedDetails;
+    type HidDeviceRevokedDetails = Electron.HidDeviceRevokedDetails;
     type IgnoreMouseEventsOptions = Electron.IgnoreMouseEventsOptions;
     type ImportCertificateOptions = Electron.ImportCertificateOptions;
     type Info = Electron.Info;
@@ -17538,6 +17850,7 @@ declare namespace Electron {
   const powerMonitor: PowerMonitor;
   const powerSaveBlocker: PowerSaveBlocker;
   const protocol: Protocol;
+  const pushNotifications: PushNotifications;
   const safeStorage: SafeStorage;
   const screen: Screen;
   const session: typeof Session;
