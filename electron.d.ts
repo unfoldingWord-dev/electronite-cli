@@ -1,4 +1,4 @@
-// Type definitions for Electron 21.2.3
+// Type definitions for Electron 22.0.0
 // Project: http://electronjs.org/
 // Definitions by: The Electron Team <https://github.com/electron/electron>
 // Definitions: https://github.com/electron/electron-typescript-definitions
@@ -895,6 +895,9 @@ declare namespace Electron {
      * `locales` folder.
      *
      * **Note:** This API must be called after the `ready` event is emitted.
+     *
+     * **Note:** To see example return values of this API compared to other locale and
+     * language APIs, see `app.getPreferredSystemLanguages()`.
      */
     getLocale(): string;
     /**
@@ -959,10 +962,68 @@ declare namespace Electron {
      */
     getPath(name: 'home' | 'appData' | 'userData' | 'sessionData' | 'temp' | 'exe' | 'module' | 'desktop' | 'documents' | 'downloads' | 'music' | 'pictures' | 'videos' | 'recent' | 'logs' | 'crashDumps'): string;
     /**
+     * The user's preferred system languages from most preferred to least preferred,
+     * including the country codes if applicable. A user can modify and add to this
+     * list on Windows or macOS through the Language and Region settings.
+     *
+     * The API uses `GlobalizationPreferences` (with a fallback to
+     * `GetSystemPreferredUILanguages`) on Windows, `\[NSLocale preferredLanguages\]`
+     * on macOS, and `g_get_language_names` on Linux.
+     *
+     * This API can be used for purposes such as deciding what language to present the
+     * application in.
+     *
+     * Here are some examples of return values of the various language and locale APIs
+     * with different configurations:
+     *
+     * * For Windows, where the application locale is German, the regional format is
+     * Finnish (Finland), and the preferred system languages from most to least
+     * preferred are French (Canada), English (US), Simplified Chinese (China),
+     * Finnish, and Spanish (Latin America):
+     *   * `app.getLocale()` returns `'de'`
+     *   * `app.getSystemLocale()` returns `'fi-FI'`
+     *   * `app.getPreferredSystemLanguages()` returns `['fr-CA', 'en-US',
+     * 'zh-Hans-CN', 'fi', 'es-419']`
+     * * On macOS, where the application locale is German, the region is Finland, and
+     * the preferred system languages from most to least preferred are French (Canada),
+     * English (US), Simplified Chinese, and Spanish (Latin America):
+     *   * `app.getLocale()` returns `'de'`
+     *   * `app.getSystemLocale()` returns `'fr-FI'`
+     *   * `app.getPreferredSystemLanguages()` returns `['fr-CA', 'en-US',
+     * 'zh-Hans-FI', 'es-419']`
+     *
+     * Both the available languages and regions and the possible return values differ
+     * between the two operating systems.
+     *
+     * As can be seen with the example above, on Windows, it is possible that a
+     * preferred system language has no country code, and that one of the preferred
+     * system languages corresponds with the language used for the regional format. On
+     * macOS, the region serves more as a default country code: the user doesn't need
+     * to have Finnish as a preferred language to use Finland as the region,and the
+     * country code `FI` is used as the country code for preferred system languages
+     * that do not have associated countries in the language name.
+     */
+    getPreferredSystemLanguages(): Array<'app.getLocale()' | 'app.getSystemLocale()' | 'app.getPreferredSystemLanguages()' | 'app.getLocale()' | 'app.getSystemLocale()' | 'app.getPreferredSystemLanguages()'>;
+    /**
      * The current system locale. On Windows and Linux, it is fetched using Chromium's
-     * `i18n` library. On macOS, the `NSLocale` object is used instead.
+     * `i18n` library. On macOS, `[NSLocale currentLocale]` is used instead. To get the
+     * user's current system language, which is not always the same as the locale, it
+     * is better to use `app.getPreferredSystemLanguages()`.
+     *
+     * Different operating systems also use the regional data differently:
+     *
+     * * Windows 11 uses the regional format for numbers, dates, and times.
+     * * macOS Monterey uses the region for formatting numbers, dates, times, and for
+     * selecting the currency symbol to use.
+     *
+     * Therefore, this API can be used for purposes such as choosing a format for
+     * rendering dates and times in a calendar app, especially when the developer wants
+     * the format to be consistent with the OS.
      *
      * **Note:** This API must be called after the `ready` event is emitted.
+     *
+     * **Note:** To see example return values of this API compared to other locale and
+     * language APIs, see `app.getPreferredSystemLanguages()`.
      */
     getSystemLocale(): string;
     /**
@@ -1919,6 +1980,11 @@ declare namespace Electron {
     /**
      * Emitted when scroll wheel event phase has begun.
      *
+     * > **Note** This event is deprecated beginning in Electron 22.0.0. See Breaking
+     * Changes for details of how to migrate to using the WebContents `input-event`
+     * event.
+     *
+     * @deprecated
      * @platform darwin
      */
     on(event: 'scroll-touch-begin', listener: Function): this;
@@ -1928,6 +1994,11 @@ declare namespace Electron {
     /**
      * Emitted when scroll wheel event phase filed upon reaching the edge of element.
      *
+     * > **Note** This event is deprecated beginning in Electron 22.0.0. See Breaking
+     * Changes for details of how to migrate to using the WebContents `input-event`
+     * event.
+     *
+     * @deprecated
      * @platform darwin
      */
     on(event: 'scroll-touch-edge', listener: Function): this;
@@ -1937,6 +2008,11 @@ declare namespace Electron {
     /**
      * Emitted when scroll wheel event phase has ended.
      *
+     * > **Note** This event is deprecated beginning in Electron 22.0.0. See Breaking
+     * Changes for details of how to migrate to using the WebContents `input-event`
+     * event.
+     *
+     * @deprecated
      * @platform darwin
      */
     on(event: 'scroll-touch-end', listener: Function): this;
@@ -3646,6 +3722,7 @@ declare namespace Electron {
 
     // Docs: https://electronjs.org/docs/api/context-bridge
 
+    exposeInIsolatedWorld(worldId: number, apiKey: string, api: any): void;
     exposeInMainWorld(apiKey: string, api: any): void;
   }
 
@@ -5023,6 +5100,19 @@ declare namespace Electron {
      * `middleButtonDown`, `rightButtonDown`, `capsLock`, `numLock`, `left`, `right`.
      */
     modifiers?: Array<'shift' | 'control' | 'ctrl' | 'alt' | 'meta' | 'command' | 'cmd' | 'isKeypad' | 'isAutoRepeat' | 'leftButtonDown' | 'middleButtonDown' | 'rightButtonDown' | 'capsLock' | 'numLock' | 'left' | 'right'>;
+    /**
+     * Can be `undefined`, `mouseDown`, `mouseUp`, `mouseMove`, `mouseEnter`,
+     * `mouseLeave`, `contextMenu`, `mouseWheel`, `rawKeyDown`, `keyDown`, `keyUp`,
+     * `char`, `gestureScrollBegin`, `gestureScrollEnd`, `gestureScrollUpdate`,
+     * `gestureFlingStart`, `gestureFlingCancel`, `gesturePinchBegin`,
+     * `gesturePinchEnd`, `gesturePinchUpdate`, `gestureTapDown`, `gestureShowPress`,
+     * `gestureTap`, `gestureTapCancel`, `gestureShortPress`, `gestureLongPress`,
+     * `gestureLongTap`, `gestureTwoFingerTap`, `gestureTapUnconfirmed`,
+     * `gestureDoubleTap`, `touchStart`, `touchMove`, `touchEnd`, `touchCancel`,
+     * `touchScrollStarted`, `pointerDown`, `pointerUp`, `pointerMove`,
+     * `pointerRawUpdate`, `pointerCancel` or `pointerCausedUaAction`.
+     */
+    type: ('undefined' | 'mouseDown' | 'mouseUp' | 'mouseMove' | 'mouseEnter' | 'mouseLeave' | 'contextMenu' | 'mouseWheel' | 'rawKeyDown' | 'keyDown' | 'keyUp' | 'char' | 'gestureScrollBegin' | 'gestureScrollEnd' | 'gestureScrollUpdate' | 'gestureFlingStart' | 'gestureFlingCancel' | 'gesturePinchBegin' | 'gesturePinchEnd' | 'gesturePinchUpdate' | 'gestureTapDown' | 'gestureShowPress' | 'gestureTap' | 'gestureTapCancel' | 'gestureShortPress' | 'gestureLongPress' | 'gestureLongTap' | 'gestureTwoFingerTap' | 'gestureTapUnconfirmed' | 'gestureDoubleTap' | 'touchStart' | 'touchMove' | 'touchEnd' | 'touchCancel' | 'touchScrollStarted' | 'pointerDown' | 'pointerUp' | 'pointerMove' | 'pointerRawUpdate' | 'pointerCancel' | 'pointerCausedUaAction');
   }
 
   interface IOCounters {
@@ -5425,9 +5515,9 @@ declare namespace Electron {
      */
     keyCode: string;
     /**
-     * The type of the event, can be `keyDown`, `keyUp` or `char`.
+     * The type of the event, can be `rawKeyDown`, `keyDown`, `keyUp` or `char`.
      */
-    type: ('keyDown' | 'keyUp' | 'char');
+    type: ('rawKeyDown' | 'keyDown' | 'keyUp' | 'char');
   }
 
   interface MemoryInfo {
@@ -6087,13 +6177,6 @@ declare namespace Electron {
     readonly currentlyLogging: boolean;
   }
 
-  interface NewWindowWebContentsEvent extends Event {
-
-    // Docs: https://electronjs.org/docs/api/structures/new-window-web-contents-event
-
-    newGuest?: BrowserWindow;
-  }
-
   class Notification extends NodeEventEmitter {
 
     // Docs: https://electronjs.org/docs/api/notification
@@ -6319,6 +6402,24 @@ declare namespace Electron {
      * The text entered or chosen by the user.
      */
     userText?: string;
+  }
+
+  interface ParentPort extends NodeJS.EventEmitter {
+
+    // Docs: https://electronjs.org/docs/api/parent-port
+
+    /**
+     * Emitted when the process receives a message. Messages received on this port will
+     * be queued up until a handler is registered for this event.
+     */
+    on(event: 'message', listener: (messageEvent: MessageEvent) => void): this;
+    once(event: 'message', listener: (messageEvent: MessageEvent) => void): this;
+    addListener(event: 'message', listener: (messageEvent: MessageEvent) => void): this;
+    removeListener(event: 'message', listener: (messageEvent: MessageEvent) => void): this;
+    /**
+     * Sends a message from the process to its parent.
+     */
+    postMessage(message: any): void;
   }
 
   interface PaymentDiscount {
@@ -7678,6 +7779,19 @@ declare namespace Electron {
                                                 port: SerialPort,
                                                 webContents: WebContents) => void): this;
     /**
+     * Emitted after `SerialPort.forget()` has been called.  This event can be used to
+     * help maintain persistent storage of permissions when
+     * `setDevicePermissionHandler` is used.
+     */
+    on(event: 'serial-port-revoked', listener: (event: Event,
+                                                details: SerialPortRevokedDetails) => void): this;
+    once(event: 'serial-port-revoked', listener: (event: Event,
+                                                details: SerialPortRevokedDetails) => void): this;
+    addListener(event: 'serial-port-revoked', listener: (event: Event,
+                                                details: SerialPortRevokedDetails) => void): this;
+    removeListener(event: 'serial-port-revoked', listener: (event: Event,
+                                                details: SerialPortRevokedDetails) => void): this;
+    /**
      * Emitted when a hunspell dictionary file starts downloading
      */
     on(event: 'spellcheck-dictionary-download-begin', listener: (event: Event,
@@ -8024,6 +8138,17 @@ declare namespace Electron {
      * `setDevicePermissionHandler`.
      */
     setDevicePermissionHandler(handler: ((details: DevicePermissionHandlerHandlerDetails) => boolean) | (null)): void;
+    /**
+     * This handler will be called when web content requests access to display media
+     * via the `navigator.mediaDevices.getDisplayMedia` API. Use the desktopCapturer
+     * API to choose which stream(s) to grant access to.
+     *
+     * Passing a WebFrameMain object as a video or audio stream will capture the video
+     * or audio stream from that frame.
+     *
+     * Passing `null` instead of a function resets the handler to its default state.
+     */
+    setDisplayMediaRequestHandler(handler: ((request: DisplayMediaRequestHandlerHandlerRequest, callback: (streams: Streams) => void) => void) | (null)): void;
     /**
      * Sets download saving directory. By default, the download directory will be the
      * `Downloads` under the respective app folder.
@@ -9311,6 +9436,9 @@ declare namespace Electron {
     removeListener(event: 'balloon-show', listener: Function): this;
     /**
      * Emitted when the tray icon is clicked.
+     *
+     * Note that on Linux this event is emitted when the tray icon receives an
+     * activation, which might not necessarily be left mouse click.
      */
     on(event: 'click', listener: (event: KeyboardEvent,
                                   /**
@@ -9786,6 +9914,89 @@ declare namespace Electron {
     url: string;
   }
 
+  class UtilityProcess extends NodeEventEmitter {
+
+    // Docs: https://electronjs.org/docs/api/utility-process
+
+    static fork(modulePath: string, args?: string[], options?: ForkOptions): UtilityProcess;
+    /**
+     * Emitted after the child process ends.
+     */
+    on(event: 'exit', listener: (
+                                 /**
+                                  * Contains the exit code for the process obtained from waitpid on posix, or
+                                  * GetExitCodeProcess on windows.
+                                  */
+                                 code: number) => void): this;
+    once(event: 'exit', listener: (
+                                 /**
+                                  * Contains the exit code for the process obtained from waitpid on posix, or
+                                  * GetExitCodeProcess on windows.
+                                  */
+                                 code: number) => void): this;
+    addListener(event: 'exit', listener: (
+                                 /**
+                                  * Contains the exit code for the process obtained from waitpid on posix, or
+                                  * GetExitCodeProcess on windows.
+                                  */
+                                 code: number) => void): this;
+    removeListener(event: 'exit', listener: (
+                                 /**
+                                  * Contains the exit code for the process obtained from waitpid on posix, or
+                                  * GetExitCodeProcess on windows.
+                                  */
+                                 code: number) => void): this;
+    /**
+     * Emitted when the child process sends a message using
+     * `process.parentPort.postMessage()`.
+     */
+    on(event: 'message', listener: (message: any) => void): this;
+    once(event: 'message', listener: (message: any) => void): this;
+    addListener(event: 'message', listener: (message: any) => void): this;
+    removeListener(event: 'message', listener: (message: any) => void): this;
+    /**
+     * Emitted once the child process has spawned successfully.
+     */
+    on(event: 'spawn', listener: Function): this;
+    once(event: 'spawn', listener: Function): this;
+    addListener(event: 'spawn', listener: Function): this;
+    removeListener(event: 'spawn', listener: Function): this;
+    /**
+     * Terminates the process gracefully. On POSIX, it uses SIGTERM but will ensure the
+     * process is reaped on exit. This function returns true if the kill is successful,
+     * and false otherwise.
+     */
+    kill(): boolean;
+    /**
+     * Send a message to the child process, optionally transferring ownership of zero
+     * or more [`MessagePortMain`][] objects.
+     *
+     * For example:
+     */
+    postMessage(message: any, transfer?: MessagePortMain[]): void;
+    /**
+     * A `Integer | undefined` representing the process identifier (PID) of the child
+     * process. If the child process fails to spawn due to errors, then the value is
+     * `undefined`. When the child process exits, then the value is `undefined` after
+     * the `exit` event is emitted.
+     */
+    pid: (number) | (undefined);
+    /**
+     * A `NodeJS.ReadableStream | null` that represents the child process's stderr. If
+     * the child was spawned with options.stdio[2] set to anything other than 'pipe',
+     * then this will be `null`. When the child process exits, then the value is `null`
+     * after the `exit` event is emitted.
+     */
+    stderr: (NodeJS.ReadableStream) | (null);
+    /**
+     * A `NodeJS.ReadableStream | null` that represents the child process's stdout. If
+     * the child was spawned with options.stdio[1] set to anything other than 'pipe',
+     * then this will be `null`. When the child process exits, then the value is `null`
+     * after the `exit` event is emitted.
+     */
+    stdout: (NodeJS.ReadableStream) | (null);
+  }
+
   class WebContents extends NodeEventEmitter {
 
     // Docs: https://electronjs.org/docs/api/web-contents
@@ -9956,6 +10167,32 @@ declare namespace Electron {
                                              */
                                             line: number,
                                             sourceId: string) => void): this;
+    /**
+     * Emitted when the page calls `window.moveTo`, `window.resizeTo` or related APIs.
+     *
+     * By default, this will move the window. To prevent that behavior, call
+     * `event.preventDefault()`.
+     */
+    on(event: 'content-bounds-updated', listener: (event: Event,
+                                                   /**
+                                                    * requested new content bounds
+                                                    */
+                                                   bounds: Rectangle) => void): this;
+    once(event: 'content-bounds-updated', listener: (event: Event,
+                                                   /**
+                                                    * requested new content bounds
+                                                    */
+                                                   bounds: Rectangle) => void): this;
+    addListener(event: 'content-bounds-updated', listener: (event: Event,
+                                                   /**
+                                                    * requested new content bounds
+                                                    */
+                                                   bounds: Rectangle) => void): this;
+    removeListener(event: 'content-bounds-updated', listener: (event: Event,
+                                                   /**
+                                                    * requested new content bounds
+                                                    */
+                                                   bounds: Rectangle) => void): this;
     /**
      * Emitted when there is a new context menu that needs to be handled.
      */
@@ -10457,10 +10694,10 @@ declare namespace Electron {
     /**
      * Emitted when the document in the top-level frame is loaded.
      */
-    on(event: 'dom-ready', listener: (event: Event) => void): this;
-    once(event: 'dom-ready', listener: (event: Event) => void): this;
-    addListener(event: 'dom-ready', listener: (event: Event) => void): this;
-    removeListener(event: 'dom-ready', listener: (event: Event) => void): this;
+    on(event: 'dom-ready', listener: Function): this;
+    once(event: 'dom-ready', listener: Function): this;
+    addListener(event: 'dom-ready', listener: Function): this;
+    removeListener(event: 'dom-ready', listener: Function): this;
     /**
      * Emitted when the window enters a full-screen state triggered by HTML API.
      */
@@ -10507,6 +10744,18 @@ declare namespace Electron {
                                           details: FrameCreatedDetails) => void): this;
     removeListener(event: 'frame-created', listener: (event: Event,
                                           details: FrameCreatedDetails) => void): this;
+    /**
+     * Emitted when an input event is sent to the WebContents. See InputEvent for
+     * details.
+     */
+    on(event: 'input-event', listener: (event: Event,
+                                        inputEvent: InputEvent) => void): this;
+    once(event: 'input-event', listener: (event: Event,
+                                        inputEvent: InputEvent) => void): this;
+    addListener(event: 'input-event', listener: (event: Event,
+                                        inputEvent: InputEvent) => void): this;
+    removeListener(event: 'input-event', listener: (event: Event,
+                                        inputEvent: InputEvent) => void): this;
     /**
      * Emitted when the renderer process sends an asynchronous message via
      * `ipcRenderer.send()`.
@@ -10587,138 +10836,6 @@ declare namespace Electron {
     once(event: 'media-started-playing', listener: Function): this;
     addListener(event: 'media-started-playing', listener: Function): this;
     removeListener(event: 'media-started-playing', listener: Function): this;
-    /**
-     * Deprecated in favor of `webContents.setWindowOpenHandler`.
-     *
-     * Emitted when the page requests to open a new window for a `url`. It could be
-     * requested by `window.open` or an external link like `<a target='_blank'>`.
-     *
-     * By default a new `BrowserWindow` will be created for the `url`.
-     *
-     * Calling `event.preventDefault()` will prevent Electron from automatically
-     * creating a new `BrowserWindow`. If you call `event.preventDefault()` and
-     * manually create a new `BrowserWindow` then you must set `event.newGuest` to
-     * reference the new `BrowserWindow` instance, failing to do so may result in
-     * unexpected behavior. For example:
-     *
-     * @deprecated
-     */
-    on(event: 'new-window', listener: (event: NewWindowWebContentsEvent,
-                                       url: string,
-                                       frameName: string,
-                                       /**
-                                        * Can be `default`, `foreground-tab`, `background-tab`, `new-window`,
-                                        * `save-to-disk` and `other`.
-                                        */
-                                       disposition: ('default' | 'foreground-tab' | 'background-tab' | 'new-window' | 'save-to-disk' | 'other'),
-                                       /**
-                                        * The options which will be used for creating the new `BrowserWindow`.
-                                        */
-                                       options: BrowserWindowConstructorOptions,
-                                       /**
-                                        * The non-standard features (features not handled by Chromium or Electron) given
-                                        * to `window.open()`. Deprecated, and will now always be the empty array `[]`.
-                                        */
-                                       additionalFeatures: string[],
-                                       /**
-                                        * The referrer that will be passed to the new window. May or may not result in the
-                                        * `Referer` header being sent, depending on the referrer policy.
-                                        */
-                                       referrer: Referrer,
-                                       /**
-                                        * The post data that will be sent to the new window, along with the appropriate
-                                        * headers that will be set. If no post data is to be sent, the value will be
-                                        * `null`. Only defined when the window is being created by a form that set
-                                        * `target=_blank`.
-                                        */
-                                       postBody: PostBody) => void): this;
-    once(event: 'new-window', listener: (event: NewWindowWebContentsEvent,
-                                       url: string,
-                                       frameName: string,
-                                       /**
-                                        * Can be `default`, `foreground-tab`, `background-tab`, `new-window`,
-                                        * `save-to-disk` and `other`.
-                                        */
-                                       disposition: ('default' | 'foreground-tab' | 'background-tab' | 'new-window' | 'save-to-disk' | 'other'),
-                                       /**
-                                        * The options which will be used for creating the new `BrowserWindow`.
-                                        */
-                                       options: BrowserWindowConstructorOptions,
-                                       /**
-                                        * The non-standard features (features not handled by Chromium or Electron) given
-                                        * to `window.open()`. Deprecated, and will now always be the empty array `[]`.
-                                        */
-                                       additionalFeatures: string[],
-                                       /**
-                                        * The referrer that will be passed to the new window. May or may not result in the
-                                        * `Referer` header being sent, depending on the referrer policy.
-                                        */
-                                       referrer: Referrer,
-                                       /**
-                                        * The post data that will be sent to the new window, along with the appropriate
-                                        * headers that will be set. If no post data is to be sent, the value will be
-                                        * `null`. Only defined when the window is being created by a form that set
-                                        * `target=_blank`.
-                                        */
-                                       postBody: PostBody) => void): this;
-    addListener(event: 'new-window', listener: (event: NewWindowWebContentsEvent,
-                                       url: string,
-                                       frameName: string,
-                                       /**
-                                        * Can be `default`, `foreground-tab`, `background-tab`, `new-window`,
-                                        * `save-to-disk` and `other`.
-                                        */
-                                       disposition: ('default' | 'foreground-tab' | 'background-tab' | 'new-window' | 'save-to-disk' | 'other'),
-                                       /**
-                                        * The options which will be used for creating the new `BrowserWindow`.
-                                        */
-                                       options: BrowserWindowConstructorOptions,
-                                       /**
-                                        * The non-standard features (features not handled by Chromium or Electron) given
-                                        * to `window.open()`. Deprecated, and will now always be the empty array `[]`.
-                                        */
-                                       additionalFeatures: string[],
-                                       /**
-                                        * The referrer that will be passed to the new window. May or may not result in the
-                                        * `Referer` header being sent, depending on the referrer policy.
-                                        */
-                                       referrer: Referrer,
-                                       /**
-                                        * The post data that will be sent to the new window, along with the appropriate
-                                        * headers that will be set. If no post data is to be sent, the value will be
-                                        * `null`. Only defined when the window is being created by a form that set
-                                        * `target=_blank`.
-                                        */
-                                       postBody: PostBody) => void): this;
-    removeListener(event: 'new-window', listener: (event: NewWindowWebContentsEvent,
-                                       url: string,
-                                       frameName: string,
-                                       /**
-                                        * Can be `default`, `foreground-tab`, `background-tab`, `new-window`,
-                                        * `save-to-disk` and `other`.
-                                        */
-                                       disposition: ('default' | 'foreground-tab' | 'background-tab' | 'new-window' | 'save-to-disk' | 'other'),
-                                       /**
-                                        * The options which will be used for creating the new `BrowserWindow`.
-                                        */
-                                       options: BrowserWindowConstructorOptions,
-                                       /**
-                                        * The non-standard features (features not handled by Chromium or Electron) given
-                                        * to `window.open()`. Deprecated, and will now always be the empty array `[]`.
-                                        */
-                                       additionalFeatures: string[],
-                                       /**
-                                        * The referrer that will be passed to the new window. May or may not result in the
-                                        * `Referer` header being sent, depending on the referrer policy.
-                                        */
-                                       referrer: Referrer,
-                                       /**
-                                        * The post data that will be sent to the new window, along with the appropriate
-                                        * headers that will be set. If no post data is to be sent, the value will be
-                                        * `null`. Only defined when the window is being created by a form that set
-                                        * `target=_blank`.
-                                        */
-                                       postBody: PostBody) => void): this;
     /**
      * Emitted when page receives favicon urls.
      */
@@ -11125,6 +11242,14 @@ declare namespace Electron {
      * Clears the navigation history.
      */
     clearHistory(): void;
+    /**
+     * Closes the page, as if the web content had called `window.close()`.
+     *
+     * If the page is successfully closed (i.e. the unload is not prevented by the
+     * page, or `waitForBeforeUnload` is false or unspecified), the WebContents will be
+     * destroyed and no longer usable. The `destroyed` event will be emitted.
+     */
+    close(opts?: Opts): void;
     /**
      * Closes the devtools.
      */
@@ -12365,13 +12490,6 @@ declare namespace Electron {
      */
     addEventListener(event: 'found-in-page', listener: (event: FoundInPageEvent) => void, useCapture?: boolean): this;
     removeEventListener(event: 'found-in-page', listener: (event: FoundInPageEvent) => void): this;
-    /**
-     * Fired when the guest page attempts to open a new browser window.
-     *
-     * The following example code opens the new url in system's default browser.
-     */
-    addEventListener(event: 'new-window', listener: (event: NewWindowEvent) => void, useCapture?: boolean): this;
-    removeEventListener(event: 'new-window', listener: (event: NewWindowEvent) => void): this;
     /**
      * Emitted when a user or the page wants to start navigation. It can happen when
      * the `window.location` object is changed or a user clicks a link in the page.
@@ -14060,6 +14178,29 @@ declare namespace Electron {
     respectQuietTime?: boolean;
   }
 
+  interface DisplayMediaRequestHandlerHandlerRequest {
+    /**
+     * Frame that is requesting access to media.
+     */
+    frame: WebFrameMain;
+    /**
+     * Origin of the page making the request.
+     */
+    securityOrigin: string;
+    /**
+     * true if the web content requested a video stream.
+     */
+    videoRequested: boolean;
+    /**
+     * true if the web content requested an audio stream.
+     */
+    audioRequested: boolean;
+    /**
+     * Whether a user gesture was active when this request was triggered.
+     */
+    userGesture: boolean;
+  }
+
   interface EnableNetworkEmulationOptions {
     /**
      * Whether to emulate network outage. Defaults to false.
@@ -14122,6 +14263,47 @@ declare namespace Electron {
      * @platform darwin
      */
     steal: boolean;
+  }
+
+  interface ForkOptions {
+    /**
+     * Environment key-value pairs. Default is `process.env`.
+     */
+    env?: Env;
+    /**
+     * List of string arguments passed to the executable.
+     */
+    execArgv?: string[];
+    /**
+     * Current working directory of the child process.
+     */
+    cwd?: string;
+    /**
+     * Allows configuring the mode for `stdout` and `stderr` of the child process.
+     * Default is `inherit`. String value can be one of `pipe`, `ignore`, `inherit`,
+     * for more details on these values you can refer to stdio documentation from
+     * Node.js. Currently this option only supports configuring `stdout` and `stderr`
+     * to either `pipe`, `inherit` or `ignore`. Configuring `stdin` is not supported;
+     * `stdin` will always be ignored. For example, the supported values will be
+     * processed as following:
+     */
+    stdio?: (Array<'pipe' | 'ignore' | 'inherit'>) | (string);
+    /**
+     * Name of the process that will appear in `name` property of `child-process-gone`
+     * event of `app`. Default is `node.mojom.NodeService`.
+     */
+    serviceName?: string;
+    /**
+     * With this flag, the utility process will be launched via the `Electron Helper
+     * (Plugin).app` helper executable on macOS, which can be codesigned with
+     * `com.apple.security.cs.disable-library-validation` and
+     * `com.apple.security.cs.allow-unsigned-executable-memory` entitlements. This will
+     * allow the utility process to load unsigned libraries. Unless you specifically
+     * need this capability, it is best to leave this disabled. Default is `false`.
+     *
+     * @platform darwin
+     */
+    allowLoadingUnsignedLibraries?: boolean;
   }
 
   interface FoundInPageEvent extends Event {
@@ -14759,20 +14941,6 @@ declare namespace Electron {
     conflictHandler?: (conflictType: 'exists' | 'existsAndRunning') => boolean;
   }
 
-  interface NewWindowEvent extends Event {
-    url: string;
-    frameName: string;
-    /**
-     * Can be `default`, `foreground-tab`, `background-tab`, `new-window`,
-     * `save-to-disk` and `other`.
-     */
-    disposition: ('default' | 'foreground-tab' | 'background-tab' | 'new-window' | 'save-to-disk' | 'other');
-    /**
-     * The options which should be used for creating the new `BrowserWindow`.
-     */
-    options: BrowserWindowConstructorOptions;
-  }
-
   interface NotificationConstructorOptions {
     /**
      * A title for the notification, which will be shown at the top of the notification
@@ -15118,6 +15286,15 @@ declare namespace Electron {
   }
 
   interface Options {
+  }
+
+  interface Opts {
+    /**
+     * if true, fire the `beforeunload` event before closing the page. If the page
+     * prevents the unload, the WebContents will not be closed. The
+     * `will-prevent-unload` will be fired if the page requests prevention of unload.
+     */
+    waitForBeforeUnload: boolean;
   }
 
   interface PageFaviconUpdatedEvent extends Event {
@@ -15589,6 +15766,15 @@ declare namespace Electron {
     frame: WebFrameMain;
   }
 
+  interface SerialPortRevokedDetails {
+    port: SerialPort;
+    frame: WebFrameMain;
+    /**
+     * The origin that the device has been revoked from.
+     */
+    origin: string;
+  }
+
   interface Settings {
     /**
      * `true` to open the app at login, `false` to remove the app as a login item.
@@ -15690,6 +15876,16 @@ declare namespace Electron {
      * to unlimited.
      */
     maxFileSize?: number;
+  }
+
+  interface Streams {
+    video?: (Video) | (WebFrameMain);
+    /**
+     * If a string is specified, can be `loopback` or `loopbackWithMute`. Specifying a
+     * loopback device will capture system audio, and is currently only supported on
+     * Windows. If a WebFrameMain is specified, will capture audio from that frame.
+     */
+    audio?: (('loopback' | 'loopbackWithMute')) | (WebFrameMain);
   }
 
   interface SystemMemoryInfo {
@@ -16177,6 +16373,9 @@ declare namespace Electron {
     canEditRichly: boolean;
   }
 
+  interface Env {
+  }
+
   interface FoundInPageResult {
     requestId: number;
     /**
@@ -16453,6 +16652,19 @@ declare namespace Electron {
      * @platform darwin,win32
      */
     height?: number;
+  }
+
+  interface Video {
+    /**
+     * The id of the stream being granted. This will usually come from a
+     * DesktopCapturerSource object.
+     */
+    id: string;
+    /**
+     * The name of the stream being granted. This will usually come from a
+     * DesktopCapturerSource object.
+     */
+    name: string;
   }
 
   interface WebPreferences {
@@ -16747,6 +16959,7 @@ declare namespace Electron {
     systemPreferences: SystemPreferences;
     TouchBar: typeof TouchBar;
     Tray: typeof Tray;
+    utilityProcess: typeof UtilityProcess;
     webContents: typeof WebContents;
     webFrameMain: typeof WebFrameMain;
   }
@@ -16806,11 +17019,13 @@ declare namespace Electron {
     type DidRedirectNavigationEvent = Electron.DidRedirectNavigationEvent;
     type DidStartNavigationEvent = Electron.DidStartNavigationEvent;
     type DisplayBalloonOptions = Electron.DisplayBalloonOptions;
+    type DisplayMediaRequestHandlerHandlerRequest = Electron.DisplayMediaRequestHandlerHandlerRequest;
     type EnableNetworkEmulationOptions = Electron.EnableNetworkEmulationOptions;
     type FeedURLOptions = Electron.FeedURLOptions;
     type FileIconOptions = Electron.FileIconOptions;
     type FindInPageOptions = Electron.FindInPageOptions;
     type FocusOptions = Electron.FocusOptions;
+    type ForkOptions = Electron.ForkOptions;
     type FoundInPageEvent = Electron.FoundInPageEvent;
     type FrameCreatedDetails = Electron.FrameCreatedDetails;
     type FromPartitionOptions = Electron.FromPartitionOptions;
@@ -16841,7 +17056,6 @@ declare namespace Electron {
     type MessageDetails = Electron.MessageDetails;
     type MessageEvent = Electron.MessageEvent;
     type MoveToApplicationsFolderOptions = Electron.MoveToApplicationsFolderOptions;
-    type NewWindowEvent = Electron.NewWindowEvent;
     type NotificationConstructorOptions = Electron.NotificationConstructorOptions;
     type OnBeforeRedirectListenerDetails = Electron.OnBeforeRedirectListenerDetails;
     type OnBeforeRequestListenerDetails = Electron.OnBeforeRequestListenerDetails;
@@ -16857,6 +17071,7 @@ declare namespace Electron {
     type OpenDialogSyncOptions = Electron.OpenDialogSyncOptions;
     type OpenExternalOptions = Electron.OpenExternalOptions;
     type Options = Electron.Options;
+    type Opts = Electron.Opts;
     type PageFaviconUpdatedEvent = Electron.PageFaviconUpdatedEvent;
     type PageTitleUpdatedEvent = Electron.PageTitleUpdatedEvent;
     type Parameters = Electron.Parameters;
@@ -16883,10 +17098,12 @@ declare namespace Electron {
     type SaveDialogReturnValue = Electron.SaveDialogReturnValue;
     type SaveDialogSyncOptions = Electron.SaveDialogSyncOptions;
     type SelectHidDeviceDetails = Electron.SelectHidDeviceDetails;
+    type SerialPortRevokedDetails = Electron.SerialPortRevokedDetails;
     type Settings = Electron.Settings;
     type SourcesOptions = Electron.SourcesOptions;
     type SSLConfigConfig = Electron.SSLConfigConfig;
     type StartLoggingOptions = Electron.StartLoggingOptions;
+    type Streams = Electron.Streams;
     type SystemMemoryInfo = Electron.SystemMemoryInfo;
     type TitleBarOverlayOptions = Electron.TitleBarOverlayOptions;
     type TitleOptions = Electron.TitleOptions;
@@ -16912,6 +17129,7 @@ declare namespace Electron {
     type WillNavigateEvent = Electron.WillNavigateEvent;
     type WillResizeDetails = Electron.WillResizeDetails;
     type EditFlags = Electron.EditFlags;
+    type Env = Electron.Env;
     type FoundInPageResult = Electron.FoundInPageResult;
     type LaunchItems = Electron.LaunchItems;
     type Margins = Electron.Margins;
@@ -16919,6 +17137,7 @@ declare namespace Electron {
     type PageRanges = Electron.PageRanges;
     type Params = Electron.Params;
     type TitleBarOverlay = Electron.TitleBarOverlay;
+    type Video = Electron.Video;
     type WebPreferences = Electron.WebPreferences;
     type DefaultFontFamily = Electron.DefaultFontFamily;
     type BluetoothDevice = Electron.BluetoothDevice;
@@ -16951,7 +17170,6 @@ declare namespace Electron {
     type MimeTypedBuffer = Electron.MimeTypedBuffer;
     type MouseInputEvent = Electron.MouseInputEvent;
     type MouseWheelInputEvent = Electron.MouseWheelInputEvent;
-    type NewWindowWebContentsEvent = Electron.NewWindowWebContentsEvent;
     type NotificationAction = Electron.NotificationAction;
     type NotificationResponse = Electron.NotificationResponse;
     type PaymentDiscount = Electron.PaymentDiscount;
@@ -17056,6 +17274,8 @@ declare namespace Electron {
     type TouchBarSlider = Electron.TouchBarSlider;
     type TouchBarSpacer = Electron.TouchBarSpacer;
     class Tray extends Electron.Tray {}
+    const utilityProcess: typeof UtilityProcess;
+    type UtilityProcess = Electron.UtilityProcess;
     const webContents: typeof WebContents;
     type WebContents = Electron.WebContents;
     const webFrameMain: typeof WebFrameMain;
@@ -17105,11 +17325,13 @@ declare namespace Electron {
     type DidRedirectNavigationEvent = Electron.DidRedirectNavigationEvent;
     type DidStartNavigationEvent = Electron.DidStartNavigationEvent;
     type DisplayBalloonOptions = Electron.DisplayBalloonOptions;
+    type DisplayMediaRequestHandlerHandlerRequest = Electron.DisplayMediaRequestHandlerHandlerRequest;
     type EnableNetworkEmulationOptions = Electron.EnableNetworkEmulationOptions;
     type FeedURLOptions = Electron.FeedURLOptions;
     type FileIconOptions = Electron.FileIconOptions;
     type FindInPageOptions = Electron.FindInPageOptions;
     type FocusOptions = Electron.FocusOptions;
+    type ForkOptions = Electron.ForkOptions;
     type FoundInPageEvent = Electron.FoundInPageEvent;
     type FrameCreatedDetails = Electron.FrameCreatedDetails;
     type FromPartitionOptions = Electron.FromPartitionOptions;
@@ -17140,7 +17362,6 @@ declare namespace Electron {
     type MessageDetails = Electron.MessageDetails;
     type MessageEvent = Electron.MessageEvent;
     type MoveToApplicationsFolderOptions = Electron.MoveToApplicationsFolderOptions;
-    type NewWindowEvent = Electron.NewWindowEvent;
     type NotificationConstructorOptions = Electron.NotificationConstructorOptions;
     type OnBeforeRedirectListenerDetails = Electron.OnBeforeRedirectListenerDetails;
     type OnBeforeRequestListenerDetails = Electron.OnBeforeRequestListenerDetails;
@@ -17156,6 +17377,7 @@ declare namespace Electron {
     type OpenDialogSyncOptions = Electron.OpenDialogSyncOptions;
     type OpenExternalOptions = Electron.OpenExternalOptions;
     type Options = Electron.Options;
+    type Opts = Electron.Opts;
     type PageFaviconUpdatedEvent = Electron.PageFaviconUpdatedEvent;
     type PageTitleUpdatedEvent = Electron.PageTitleUpdatedEvent;
     type Parameters = Electron.Parameters;
@@ -17182,10 +17404,12 @@ declare namespace Electron {
     type SaveDialogReturnValue = Electron.SaveDialogReturnValue;
     type SaveDialogSyncOptions = Electron.SaveDialogSyncOptions;
     type SelectHidDeviceDetails = Electron.SelectHidDeviceDetails;
+    type SerialPortRevokedDetails = Electron.SerialPortRevokedDetails;
     type Settings = Electron.Settings;
     type SourcesOptions = Electron.SourcesOptions;
     type SSLConfigConfig = Electron.SSLConfigConfig;
     type StartLoggingOptions = Electron.StartLoggingOptions;
+    type Streams = Electron.Streams;
     type SystemMemoryInfo = Electron.SystemMemoryInfo;
     type TitleBarOverlayOptions = Electron.TitleBarOverlayOptions;
     type TitleOptions = Electron.TitleOptions;
@@ -17211,6 +17435,7 @@ declare namespace Electron {
     type WillNavigateEvent = Electron.WillNavigateEvent;
     type WillResizeDetails = Electron.WillResizeDetails;
     type EditFlags = Electron.EditFlags;
+    type Env = Electron.Env;
     type FoundInPageResult = Electron.FoundInPageResult;
     type LaunchItems = Electron.LaunchItems;
     type Margins = Electron.Margins;
@@ -17218,6 +17443,7 @@ declare namespace Electron {
     type PageRanges = Electron.PageRanges;
     type Params = Electron.Params;
     type TitleBarOverlay = Electron.TitleBarOverlay;
+    type Video = Electron.Video;
     type WebPreferences = Electron.WebPreferences;
     type DefaultFontFamily = Electron.DefaultFontFamily;
     type BluetoothDevice = Electron.BluetoothDevice;
@@ -17250,7 +17476,6 @@ declare namespace Electron {
     type MimeTypedBuffer = Electron.MimeTypedBuffer;
     type MouseInputEvent = Electron.MouseInputEvent;
     type MouseWheelInputEvent = Electron.MouseWheelInputEvent;
-    type NewWindowWebContentsEvent = Electron.NewWindowWebContentsEvent;
     type NotificationAction = Electron.NotificationAction;
     type NotificationResponse = Electron.NotificationResponse;
     type PaymentDiscount = Electron.PaymentDiscount;
@@ -17339,11 +17564,13 @@ declare namespace Electron {
     type DidRedirectNavigationEvent = Electron.DidRedirectNavigationEvent;
     type DidStartNavigationEvent = Electron.DidStartNavigationEvent;
     type DisplayBalloonOptions = Electron.DisplayBalloonOptions;
+    type DisplayMediaRequestHandlerHandlerRequest = Electron.DisplayMediaRequestHandlerHandlerRequest;
     type EnableNetworkEmulationOptions = Electron.EnableNetworkEmulationOptions;
     type FeedURLOptions = Electron.FeedURLOptions;
     type FileIconOptions = Electron.FileIconOptions;
     type FindInPageOptions = Electron.FindInPageOptions;
     type FocusOptions = Electron.FocusOptions;
+    type ForkOptions = Electron.ForkOptions;
     type FoundInPageEvent = Electron.FoundInPageEvent;
     type FrameCreatedDetails = Electron.FrameCreatedDetails;
     type FromPartitionOptions = Electron.FromPartitionOptions;
@@ -17374,7 +17601,6 @@ declare namespace Electron {
     type MessageDetails = Electron.MessageDetails;
     type MessageEvent = Electron.MessageEvent;
     type MoveToApplicationsFolderOptions = Electron.MoveToApplicationsFolderOptions;
-    type NewWindowEvent = Electron.NewWindowEvent;
     type NotificationConstructorOptions = Electron.NotificationConstructorOptions;
     type OnBeforeRedirectListenerDetails = Electron.OnBeforeRedirectListenerDetails;
     type OnBeforeRequestListenerDetails = Electron.OnBeforeRequestListenerDetails;
@@ -17390,6 +17616,7 @@ declare namespace Electron {
     type OpenDialogSyncOptions = Electron.OpenDialogSyncOptions;
     type OpenExternalOptions = Electron.OpenExternalOptions;
     type Options = Electron.Options;
+    type Opts = Electron.Opts;
     type PageFaviconUpdatedEvent = Electron.PageFaviconUpdatedEvent;
     type PageTitleUpdatedEvent = Electron.PageTitleUpdatedEvent;
     type Parameters = Electron.Parameters;
@@ -17416,10 +17643,12 @@ declare namespace Electron {
     type SaveDialogReturnValue = Electron.SaveDialogReturnValue;
     type SaveDialogSyncOptions = Electron.SaveDialogSyncOptions;
     type SelectHidDeviceDetails = Electron.SelectHidDeviceDetails;
+    type SerialPortRevokedDetails = Electron.SerialPortRevokedDetails;
     type Settings = Electron.Settings;
     type SourcesOptions = Electron.SourcesOptions;
     type SSLConfigConfig = Electron.SSLConfigConfig;
     type StartLoggingOptions = Electron.StartLoggingOptions;
+    type Streams = Electron.Streams;
     type SystemMemoryInfo = Electron.SystemMemoryInfo;
     type TitleBarOverlayOptions = Electron.TitleBarOverlayOptions;
     type TitleOptions = Electron.TitleOptions;
@@ -17445,6 +17674,7 @@ declare namespace Electron {
     type WillNavigateEvent = Electron.WillNavigateEvent;
     type WillResizeDetails = Electron.WillResizeDetails;
     type EditFlags = Electron.EditFlags;
+    type Env = Electron.Env;
     type FoundInPageResult = Electron.FoundInPageResult;
     type LaunchItems = Electron.LaunchItems;
     type Margins = Electron.Margins;
@@ -17452,6 +17682,7 @@ declare namespace Electron {
     type PageRanges = Electron.PageRanges;
     type Params = Electron.Params;
     type TitleBarOverlay = Electron.TitleBarOverlay;
+    type Video = Electron.Video;
     type WebPreferences = Electron.WebPreferences;
     type DefaultFontFamily = Electron.DefaultFontFamily;
     type BluetoothDevice = Electron.BluetoothDevice;
@@ -17484,7 +17715,6 @@ declare namespace Electron {
     type MimeTypedBuffer = Electron.MimeTypedBuffer;
     type MouseInputEvent = Electron.MouseInputEvent;
     type MouseWheelInputEvent = Electron.MouseWheelInputEvent;
-    type NewWindowWebContentsEvent = Electron.NewWindowWebContentsEvent;
     type NotificationAction = Electron.NotificationAction;
     type NotificationResponse = Electron.NotificationResponse;
     type PaymentDiscount = Electron.PaymentDiscount;
@@ -17601,6 +17831,8 @@ declare namespace Electron {
     type TouchBarSlider = Electron.TouchBarSlider;
     type TouchBarSpacer = Electron.TouchBarSpacer;
     class Tray extends Electron.Tray {}
+    const utilityProcess: typeof UtilityProcess;
+    type UtilityProcess = Electron.UtilityProcess;
     const webContents: typeof WebContents;
     type WebContents = Electron.WebContents;
     const webFrame: WebFrame;
@@ -17652,11 +17884,13 @@ declare namespace Electron {
     type DidRedirectNavigationEvent = Electron.DidRedirectNavigationEvent;
     type DidStartNavigationEvent = Electron.DidStartNavigationEvent;
     type DisplayBalloonOptions = Electron.DisplayBalloonOptions;
+    type DisplayMediaRequestHandlerHandlerRequest = Electron.DisplayMediaRequestHandlerHandlerRequest;
     type EnableNetworkEmulationOptions = Electron.EnableNetworkEmulationOptions;
     type FeedURLOptions = Electron.FeedURLOptions;
     type FileIconOptions = Electron.FileIconOptions;
     type FindInPageOptions = Electron.FindInPageOptions;
     type FocusOptions = Electron.FocusOptions;
+    type ForkOptions = Electron.ForkOptions;
     type FoundInPageEvent = Electron.FoundInPageEvent;
     type FrameCreatedDetails = Electron.FrameCreatedDetails;
     type FromPartitionOptions = Electron.FromPartitionOptions;
@@ -17687,7 +17921,6 @@ declare namespace Electron {
     type MessageDetails = Electron.MessageDetails;
     type MessageEvent = Electron.MessageEvent;
     type MoveToApplicationsFolderOptions = Electron.MoveToApplicationsFolderOptions;
-    type NewWindowEvent = Electron.NewWindowEvent;
     type NotificationConstructorOptions = Electron.NotificationConstructorOptions;
     type OnBeforeRedirectListenerDetails = Electron.OnBeforeRedirectListenerDetails;
     type OnBeforeRequestListenerDetails = Electron.OnBeforeRequestListenerDetails;
@@ -17703,6 +17936,7 @@ declare namespace Electron {
     type OpenDialogSyncOptions = Electron.OpenDialogSyncOptions;
     type OpenExternalOptions = Electron.OpenExternalOptions;
     type Options = Electron.Options;
+    type Opts = Electron.Opts;
     type PageFaviconUpdatedEvent = Electron.PageFaviconUpdatedEvent;
     type PageTitleUpdatedEvent = Electron.PageTitleUpdatedEvent;
     type Parameters = Electron.Parameters;
@@ -17729,10 +17963,12 @@ declare namespace Electron {
     type SaveDialogReturnValue = Electron.SaveDialogReturnValue;
     type SaveDialogSyncOptions = Electron.SaveDialogSyncOptions;
     type SelectHidDeviceDetails = Electron.SelectHidDeviceDetails;
+    type SerialPortRevokedDetails = Electron.SerialPortRevokedDetails;
     type Settings = Electron.Settings;
     type SourcesOptions = Electron.SourcesOptions;
     type SSLConfigConfig = Electron.SSLConfigConfig;
     type StartLoggingOptions = Electron.StartLoggingOptions;
+    type Streams = Electron.Streams;
     type SystemMemoryInfo = Electron.SystemMemoryInfo;
     type TitleBarOverlayOptions = Electron.TitleBarOverlayOptions;
     type TitleOptions = Electron.TitleOptions;
@@ -17758,6 +17994,7 @@ declare namespace Electron {
     type WillNavigateEvent = Electron.WillNavigateEvent;
     type WillResizeDetails = Electron.WillResizeDetails;
     type EditFlags = Electron.EditFlags;
+    type Env = Electron.Env;
     type FoundInPageResult = Electron.FoundInPageResult;
     type LaunchItems = Electron.LaunchItems;
     type Margins = Electron.Margins;
@@ -17765,6 +18002,7 @@ declare namespace Electron {
     type PageRanges = Electron.PageRanges;
     type Params = Electron.Params;
     type TitleBarOverlay = Electron.TitleBarOverlay;
+    type Video = Electron.Video;
     type WebPreferences = Electron.WebPreferences;
     type DefaultFontFamily = Electron.DefaultFontFamily;
     type BluetoothDevice = Electron.BluetoothDevice;
@@ -17797,7 +18035,6 @@ declare namespace Electron {
     type MimeTypedBuffer = Electron.MimeTypedBuffer;
     type MouseInputEvent = Electron.MouseInputEvent;
     type MouseWheelInputEvent = Electron.MouseWheelInputEvent;
-    type NewWindowWebContentsEvent = Electron.NewWindowWebContentsEvent;
     type NotificationAction = Electron.NotificationAction;
     type NotificationResponse = Electron.NotificationResponse;
     type PaymentDiscount = Electron.PaymentDiscount;
@@ -17851,6 +18088,7 @@ declare namespace Electron {
   const nativeTheme: NativeTheme;
   const net: Net;
   const netLog: NetLog;
+  const parentPort: ParentPort;
   const powerMonitor: PowerMonitor;
   const powerSaveBlocker: PowerSaveBlocker;
   const protocol: Protocol;
@@ -17860,6 +18098,7 @@ declare namespace Electron {
   const session: typeof Session;
   const shell: Shell;
   const systemPreferences: SystemPreferences;
+  const utilityProcess: typeof UtilityProcess;
   const webContents: typeof WebContents;
   const webFrame: WebFrame;
   const webFrameMain: typeof WebFrameMain;
@@ -18073,6 +18312,11 @@ declare namespace NodeJS {
      */
     noDeprecation: boolean;
     /**
+     * A `Electron.ParentPort` property if this is a `UtilityProcess` (or `null`
+     * otherwise) allowing communication with the parent process.
+     */
+    parentPort: Electron.ParentPort;
+    /**
      * A `string` representing the path to the resources directory.
      *
      */
@@ -18109,9 +18353,10 @@ declare namespace NodeJS {
      * * `browser` - The main process
      * * `renderer` - A renderer process
      * * `worker` - In a web worker
+     * * `utility` - In a node process launched as a service
      *
      */
-    readonly type: ('browser' | 'renderer' | 'worker');
+    readonly type: ('browser' | 'renderer' | 'worker' | 'utility');
     /**
      * A `boolean`. If the app is running as a Windows Store app (appx), this property
      * is `true`, for otherwise it is `undefined`.
