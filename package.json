@@ -1,6 +1,6 @@
 {
   "name": "electronite",
-  "version": "22.0.1-graphite-beta",
+  "version": "22.0.3-graphite-beta",
   "description": "Electron with graphite",
   "bin": {
     "electronite": "cli.js"
