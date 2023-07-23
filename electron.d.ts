@@ -1,4 +1,4 @@
-// Type definitions for Electron 22.0.3
+// Type definitions for Electron 23.3.10
 // Project: http://electronjs.org/
 // Definitions by: The Electron Team <https://github.com/electron/electron>
 // Definitions: https://github.com/electron/electron-typescript-definitions
@@ -408,8 +408,6 @@ declare namespace Electron {
      * application's `Info.plist` file must define the URL scheme within the
      * `CFBundleURLTypes` key, and set `NSPrincipalClass` to `AtomApplication`.
      *
-     * You should call `event.preventDefault()` if you want to handle this event.
-     *
      * As with the `open-file` event, be sure to register a listener for the `open-url`
      * event early in your application startup to detect if the the application being
      * is being opened to handle a URL. If you register the listener in response to a
@@ -500,6 +498,11 @@ declare namespace Electron {
      * `argv` is an Array of the second instance's command line arguments, and
      * `workingDirectory` is its current working directory. Usually applications
      * respond to this by making their primary window focused and non-minimized.
+     *
+     * **Note:** `argv` will not be exactly the same list of arguments as those passed
+     * to the second instance. The order might change and additional arguments might be
+     * appended. If you need to maintain the exact same arguments, it's advised to use
+     * `additionalData` instead.
      *
      * **Note:** If the second instance is started by a different user than the first,
      * the `argv` array will not include the arguments.
@@ -684,8 +687,7 @@ declare namespace Electron {
      * Emitted when the application has finished basic startup. On Windows and Linux,
      * the `will-finish-launching` event is the same as the `ready` event; on macOS,
      * this event represents the `applicationWillFinishLaunching` notification of
-     * `NSApplication`. You would usually set up listeners for the `open-file` and
-     * `open-url` events here, and start the crash reporter and auto updater.
+     * `NSApplication`.
      *
      * In most cases, you should do everything in the `ready` event handler.
      */
@@ -976,21 +978,14 @@ declare namespace Electron {
      * Here are some examples of return values of the various language and locale APIs
      * with different configurations:
      *
-     * * For Windows, where the application locale is German, the regional format is
-     * Finnish (Finland), and the preferred system languages from most to least
-     * preferred are French (Canada), English (US), Simplified Chinese (China),
-     * Finnish, and Spanish (Latin America):
-     *   * `app.getLocale()` returns `'de'`
-     *   * `app.getSystemLocale()` returns `'fi-FI'`
-     *   * `app.getPreferredSystemLanguages()` returns `['fr-CA', 'en-US',
-     * 'zh-Hans-CN', 'fi', 'es-419']`
-     * * On macOS, where the application locale is German, the region is Finland, and
-     * the preferred system languages from most to least preferred are French (Canada),
+     * On Windows, given application locale is German, the regional format is Finnish
+     * (Finland), and the preferred system languages from most to least preferred are
+     * French (Canada), English (US), Simplified Chinese (China), Finnish, and Spanish
+     * (Latin America):
+     *
+     * On macOS, given the application locale is German, the region is Finland, and the
+     * preferred system languages from most to least preferred are French (Canada),
      * English (US), Simplified Chinese, and Spanish (Latin America):
-     *   * `app.getLocale()` returns `'de'`
-     *   * `app.getSystemLocale()` returns `'fr-FI'`
-     *   * `app.getPreferredSystemLanguages()` returns `['fr-CA', 'en-US',
-     * 'zh-Hans-FI', 'es-419']`
      *
      * Both the available languages and regions and the possible return values differ
      * between the two operating systems.
@@ -1003,7 +998,7 @@ declare namespace Electron {
      * country code `FI` is used as the country code for preferred system languages
      * that do not have associated countries in the language name.
      */
-    getPreferredSystemLanguages(): Array<'app.getLocale()' | 'app.getSystemLocale()' | 'app.getPreferredSystemLanguages()' | 'app.getLocale()' | 'app.getSystemLocale()' | 'app.getPreferredSystemLanguages()'>;
+    getPreferredSystemLanguages(): string[];
     /**
      * The current system locale. On Windows and Linux, it is fetched using Chromium's
      * `i18n` library. On macOS, `[NSLocale currentLocale]` is used instead. To get the
@@ -1536,7 +1531,8 @@ declare namespace Electron {
      * WOW).
      *
      * You can use this property to prompt users to download the arm64 version of your
-     * application when they are running the x64 version under Rosetta incorrectly.
+     * application when they are mistakenly running the x64 version under Rosetta or
+     * WOW.
      *
      * @platform darwin,win32
      */
@@ -2237,9 +2233,12 @@ declare namespace Electron {
      * Resolves with a NativeImage
      *
      * Captures a snapshot of the page within `rect`. Omitting `rect` will capture the
-     * whole visible page. If the page is not visible, `rect` may be empty.
+     * whole visible page. If the page is not visible, `rect` may be empty. The page is
+     * considered visible when its browser window is hidden and the capturer count is
+     * non-zero. If you would like the page to stay hidden, you should ensure that
+     * `stayHidden` is set to true.
      */
-    capturePage(rect?: Rectangle): Promise<Electron.NativeImage>;
+    capturePage(rect?: Rectangle, opts?: Opts): Promise<Electron.NativeImage>;
     /**
      * Moves window to the center of the screen.
      */
@@ -2425,11 +2424,11 @@ declare namespace Electron {
      */
     isEnabled(): boolean;
     /**
-     * Returns whether the window can be focused.
+     * Whether the window can be focused.
      *
      * @platform darwin,win32
      */
-    isFocusable(): void;
+    isFocusable(): boolean;
     /**
      * Whether the window is focused.
      */
@@ -2443,6 +2442,12 @@ declare namespace Electron {
      * window.
      */
     isFullScreenable(): boolean;
+    /**
+     * Whether the window will be hidden when the user toggles into mission control.
+     *
+     * @platform darwin
+     */
+    isHiddenInMissionControl(): boolean;
     /**
      * Whether the window is in kiosk mode.
      */
@@ -2524,7 +2529,7 @@ declare namespace Electron {
      */
     isTabletMode(): boolean;
     /**
-     * Whether the window is visible to the user.
+     * Whether the window is visible to the user in the foreground of the app.
      */
     isVisible(): boolean;
     /**
@@ -2667,6 +2672,9 @@ declare namespace Electron {
      *
      * The aspect ratio is not respected when window is resized programmatically with
      * APIs like `win.setSize`.
+     *
+     * To reset an aspect ratio, pass 0 as the `aspectRatio` value:
+     * `win.setAspectRatio(0)`.
      */
     setAspectRatio(aspectRatio: number, extraSize?: Size): void;
     /**
@@ -2766,6 +2774,10 @@ declare namespace Electron {
     setFocusable(focusable: boolean): void;
     /**
      * Sets whether the window should be in fullscreen mode.
+     *
+     * **Note:** On macOS, fullscreen transitions take place asynchronously. If further
+     * actions depend on the fullscreen state, use the 'enter-full-screen' or
+     * 'leave-full-screen' events.
      */
     setFullScreen(flag: boolean): void;
     /**
@@ -2777,6 +2789,13 @@ declare namespace Electron {
      * Sets whether the window should have a shadow.
      */
     setHasShadow(hasShadow: boolean): void;
+    /**
+     * Sets whether the window will be hidden when the user toggles into mission
+     * control.
+     *
+     * @platform darwin
+     */
+    setHiddenInMissionControl(hidden: boolean): void;
     /**
      * Changes window icon.
      *
@@ -2997,7 +3016,7 @@ declare namespace Electron {
     /**
      * Sets the touchBar layout for the current window. Specifying `null` or
      * `undefined` clears the touch bar. This method only has an effect if the machine
-     * has a touch bar and is running on macOS 10.12.1+.
+     * has a touch bar.
      *
      * **Note:** The TouchBar API is currently experimental and may change or be
      * removed in future Electron releases.
@@ -4445,6 +4464,10 @@ declare namespace Electron {
      * `true` for an internal display and `false` for an external display
      */
     internal: boolean;
+    /**
+     * User-friendly label, determined by the platform.
+     */
+    label: string;
     /**
      * Whether or not the display is a monochrome display.
      */
@@ -6270,8 +6293,8 @@ declare namespace Electron {
                                    */
                                   reply: string) => void): this;
     /**
-     * Emitted when the notification is shown to the user, note this could be fired
-     * multiple times as a notification can be shown multiple times through the
+     * Emitted when the notification is shown to the user. Note that this event can be
+     * fired multiple times as a notification can be shown multiple times through the
      * `show()` method.
      */
     on(event: 'show', listener: (event: Event) => void): this;
@@ -6291,10 +6314,9 @@ declare namespace Electron {
      */
     close(): void;
     /**
-     * Immediately shows the notification to the user, please note this means unlike
-     * the HTML5 Notification implementation, instantiating a `new Notification` does
-     * not immediately show it to the user, you need to call this method before the OS
-     * will display it.
+     * Immediately shows the notification to the user. Unlike the web notification API,
+     * instantiating a `new Notification()` does not immediately show it to the user.
+     * Instead, you need to call this method before the OS will display it.
      *
      * If the notification has been shown before, this method will dismiss the
      * previously shown notification and create a new one with identical properties.
@@ -7740,6 +7762,26 @@ declare namespace Electron {
                                                webContents: WebContents,
                                                callback: (portId: string) => void) => void): this;
     /**
+     * Emitted when a USB device needs to be selected when a call to
+     * `navigator.usb.requestDevice` is made. `callback` should be called with
+     * `deviceId` to be selected; passing no arguments to `callback` will cancel the
+     * request.  Additionally, permissioning on `navigator.usb` can be further managed
+     * by using ses.setPermissionCheckHandler(handler) and
+     * ses.setDevicePermissionHandler(handler)`.
+     */
+    on(event: 'select-usb-device', listener: (event: Event,
+                                              details: SelectUsbDeviceDetails,
+                                              callback: (deviceId?: string) => void) => void): this;
+    once(event: 'select-usb-device', listener: (event: Event,
+                                              details: SelectUsbDeviceDetails,
+                                              callback: (deviceId?: string) => void) => void): this;
+    addListener(event: 'select-usb-device', listener: (event: Event,
+                                              details: SelectUsbDeviceDetails,
+                                              callback: (deviceId?: string) => void) => void): this;
+    removeListener(event: 'select-usb-device', listener: (event: Event,
+                                              details: SelectUsbDeviceDetails,
+                                              callback: (deviceId?: string) => void) => void): this;
+    /**
      * Emitted after `navigator.serial.requestPort` has been called and
      * `select-serial-port` has fired if a new serial port becomes available before the
      * callback from `select-serial-port` is called.  This event is intended for use
@@ -7884,6 +7926,49 @@ declare namespace Electron {
                                                                * The language code of the dictionary file
                                                                */
                                                               languageCode: string) => void): this;
+    /**
+     * Emitted after `navigator.usb.requestDevice` has been called and
+     * `select-usb-device` has fired if a new device becomes available before the
+     * callback from `select-usb-device` is called.  This event is intended for use
+     * when using a UI to ask users to pick a device so that the UI can be updated with
+     * the newly added device.
+     */
+    on(event: 'usb-device-added', listener: (event: Event,
+                                             details: UsbDeviceAddedDetails) => void): this;
+    once(event: 'usb-device-added', listener: (event: Event,
+                                             details: UsbDeviceAddedDetails) => void): this;
+    addListener(event: 'usb-device-added', listener: (event: Event,
+                                             details: UsbDeviceAddedDetails) => void): this;
+    removeListener(event: 'usb-device-added', listener: (event: Event,
+                                             details: UsbDeviceAddedDetails) => void): this;
+    /**
+     * Emitted after `navigator.usb.requestDevice` has been called and
+     * `select-usb-device` has fired if a device has been removed before the callback
+     * from `select-usb-device` is called.  This event is intended for use when using a
+     * UI to ask users to pick a device so that the UI can be updated to remove the
+     * specified device.
+     */
+    on(event: 'usb-device-removed', listener: (event: Event,
+                                               details: UsbDeviceRemovedDetails) => void): this;
+    once(event: 'usb-device-removed', listener: (event: Event,
+                                               details: UsbDeviceRemovedDetails) => void): this;
+    addListener(event: 'usb-device-removed', listener: (event: Event,
+                                               details: UsbDeviceRemovedDetails) => void): this;
+    removeListener(event: 'usb-device-removed', listener: (event: Event,
+                                               details: UsbDeviceRemovedDetails) => void): this;
+    /**
+     * Emitted after `USBDevice.forget()` has been called.  This event can be used to
+     * help maintain persistent storage of permissions when
+     * `setDevicePermissionHandler` is used.
+     */
+    on(event: 'usb-device-revoked', listener: (event: Event,
+                                               details: UsbDeviceRevokedDetails) => void): this;
+    once(event: 'usb-device-revoked', listener: (event: Event,
+                                               details: UsbDeviceRevokedDetails) => void): this;
+    addListener(event: 'usb-device-revoked', listener: (event: Event,
+                                               details: UsbDeviceRevokedDetails) => void): this;
+    removeListener(event: 'usb-device-revoked', listener: (event: Event,
+                                               details: UsbDeviceRevokedDetails) => void): this;
     /**
      * Emitted when Electron is about to download `item` in `webContents`.
      *
@@ -8170,7 +8255,7 @@ declare namespace Electron {
      * `setPermissionCheckHandler` to get complete permission handling. Most web APIs
      * do a permission check and then make a permission request if the check is denied.
      */
-    setPermissionRequestHandler(handler: ((webContents: WebContents, permission: 'clipboard-read' | 'media' | 'display-capture' | 'mediaKeySystem' | 'geolocation' | 'notifications' | 'midi' | 'midiSysex' | 'pointerLock' | 'fullscreen' | 'openExternal' | 'window-placement' | 'unknown', callback: (permissionGranted: boolean) => void, details: PermissionRequestHandlerHandlerDetails) => void) | (null)): void;
+    setPermissionRequestHandler(handler: ((webContents: WebContents, permission: 'clipboard-read' | 'clipboard-sanitized-write' | 'media' | 'display-capture' | 'mediaKeySystem' | 'geolocation' | 'notifications' | 'midi' | 'midiSysex' | 'pointerLock' | 'fullscreen' | 'openExternal' | 'window-management' | 'unknown', callback: (permissionGranted: boolean) => void, details: PermissionRequestHandlerHandlerDetails) => void) | (null)): void;
     /**
      * Adds scripts that will be executed on ALL web contents that are associated with
      * this session just before normal `preload` scripts run.
@@ -8590,16 +8675,13 @@ declare namespace Electron {
      * information about how to set these in the context of Electron.
      *
      * This user consent was not required until macOS 10.14 Mojave, so this method will
-     * always return `true` if your system is running 10.13 High Sierra or lower.
+     * always return `true` if your system is running 10.13 High Sierra.
      *
      * @platform darwin
      */
     askForMediaAccess(mediaType: 'microphone' | 'camera'): Promise<boolean>;
     /**
      * whether or not this device has the ability to use Touch ID.
-     *
-     * **NOTE:** This API will return `false` on macOS systems older than Sierra
-     * 10.12.2.
      *
      * @platform darwin
      */
@@ -8659,10 +8741,10 @@ declare namespace Electron {
     /**
      * Can be `not-determined`, `granted`, `denied`, `restricted` or `unknown`.
      *
-     * This user consent was not required on macOS 10.13 High Sierra or lower so this
-     * method will always return `granted`. macOS 10.14 Mojave or higher requires
-     * consent for `microphone` and `camera` access. macOS 10.15 Catalina or higher
-     * requires consent for `screen` access.
+     * This user consent was not required on macOS 10.13 High Sierra so this method
+     * will always return `granted`. macOS 10.14 Mojave or higher requires consent for
+     * `microphone` and `camera` access. macOS 10.15 Catalina or higher requires
+     * consent for `screen` access.
      *
      * Windows 10 has a global setting controlling `microphone` and `camera` access for
      * all win32 applications. It will always return `granted` for `screen` and for all
@@ -8779,9 +8861,6 @@ declare namespace Electron {
      * auto-prompt for Touch ID biometric consent. This could be done with
      * `node-keytar`, such that one would store an encryption key with `node-keytar`
      * and only fetch it if `promptTouchID()` resolves.
-     *
-     * **NOTE:** This API will return a rejected Promise on macOS systems older than
-     * Sierra 10.12.2.
      *
      * @platform darwin
      */
@@ -9899,6 +9978,72 @@ declare namespace Electron {
     type: 'rawData';
   }
 
+  interface USBDevice {
+
+    // Docs: https://electronjs.org/docs/api/structures/usb-device
+
+    /**
+     * The device class for the communication interface supported by the device
+     */
+    deviceClass: number;
+    /**
+     * Unique identifier for the device.
+     */
+    deviceId: string;
+    /**
+     * The device protocol for the communication interface supported by the device
+     */
+    deviceProtocol: number;
+    /**
+     * The device subclass for the communication interface supported by the device
+     */
+    deviceSubclass: number;
+    /**
+     * The major version number of the device as defined by the device manufacturer.
+     */
+    deviceVersionMajor: number;
+    /**
+     * The minor version number of the device as defined by the device manufacturer.
+     */
+    deviceVersionMinor: number;
+    /**
+     * The subminor version number of the device as defined by the device manufacturer.
+     */
+    deviceVersionSubminor: number;
+    /**
+     * The manufacturer name of the device.
+     */
+    manufacturerName?: string;
+    /**
+     * The USB product ID.
+     */
+    productId: number;
+    /**
+     * Name of the device.
+     */
+    productName?: string;
+    /**
+     * The USB device serial number.
+     */
+    serialNumber?: string;
+    /**
+     * The USB protocol major version supported by the device
+     */
+    usbVersionMajor: number;
+    /**
+     * The USB protocol minor version supported by the device
+     */
+    usbVersionMinor: number;
+    /**
+     * The USB protocol subminor version supported by the device
+     */
+    usbVersionSubminor: number;
+    /**
+     * The USB vendor ID.
+     */
+    vendorId: number;
+  }
+
   interface UserDefaultTypes {
 
     // Docs: https://electronjs.org/docs/api/structures/user-default-types
@@ -10001,33 +10146,32 @@ declare namespace Electron {
     // Docs: https://electronjs.org/docs/api/web-contents
 
     /**
-     * | undefined - A WebContents instance with the given TargetID, or `undefined` if
-     * there is no WebContents associated with the given TargetID.
+     * A WebContents instance with the given TargetID, or `undefined` if there is no
+     * WebContents associated with the given TargetID.
      *
      * When communicating with the Chrome DevTools Protocol, it can be useful to lookup
      * a WebContents instance based on its assigned TargetID.
      */
-    static fromDevToolsTargetId(targetId: string): WebContents;
+    static fromDevToolsTargetId(targetId: string): (WebContents) | (undefined);
     /**
-     * | undefined - A WebContents instance with the given WebFrameMain, or `undefined`
-     * if there is no WebContents associated with the given WebFrameMain.
+     * A WebContents instance with the given WebFrameMain, or `undefined` if there is
+     * no WebContents associated with the given WebFrameMain.
      */
-    static fromFrame(frame: WebFrameMain): WebContents;
+    static fromFrame(frame: WebFrameMain): (WebContents) | (undefined);
     /**
-     * | undefined - A WebContents instance with the given ID, or `undefined` if there
-     * is no WebContents associated with the given ID.
+     * A WebContents instance with the given ID, or `undefined` if there is no
+     * WebContents associated with the given ID.
      */
-    static fromId(id: number): WebContents;
+    static fromId(id: number): (WebContents) | (undefined);
     /**
      * An array of all `WebContents` instances. This will contain web contents for all
      * windows, webviews, opened devtools, and devtools extension background pages.
      */
     static getAllWebContents(): WebContents[];
     /**
-     * | null - The web contents that is focused in this application, otherwise returns
-     * `null`.
+     * The web contents that is focused in this application, otherwise returns `null`.
      */
-    static getFocusedWebContents(): WebContents;
+    static getFocusedWebContents(): (WebContents) | (null);
     /**
      * Emitted before dispatching the `keydown` and `keyup` events in the page. Calling
      * `event.preventDefault` will prevent the page `keydown`/`keyup` events and the
@@ -10983,14 +11127,19 @@ declare namespace Electron {
     addListener(event: 'responsive', listener: Function): this;
     removeListener(event: 'responsive', listener: Function): this;
     /**
-     * Emitted when bluetooth device needs to be selected on call to
-     * `navigator.bluetooth.requestDevice`. To use `navigator.bluetooth` api
-     * `webBluetooth` should be enabled. If `event.preventDefault` is not called, first
-     * available device will be selected. `callback` should be called with `deviceId`
-     * to be selected, passing empty string to `callback` will cancel the request.
+     * Emitted when a bluetooth device needs to be selected when a call to
+     * `navigator.bluetooth.requestDevice` is made. `callback` should be called with
+     * the `deviceId` of the device to be selected.  Passing an empty string to
+     * `callback` will cancel the request.
      *
-     * If no event listener is added for this event, all bluetooth requests will be
-     * cancelled.
+     * If an event listener is not added for this event, or if `event.preventDefault`
+     * is not called when handling this event, the first available device will be
+     * automatically selected.
+     *
+     * Due to the nature of bluetooth, scanning for devices when
+     * `navigator.bluetooth.requestDevice` is called may take time and will cause
+     * `select-bluetooth-device` to fire multiple times until `callback` is called with
+     * either a device id or an empty string to cancel the request.
      */
     on(event: 'select-bluetooth-device', listener: (event: Event,
                                                     devices: BluetoothDevice[],
@@ -11234,9 +11383,11 @@ declare namespace Electron {
      * Resolves with a NativeImage
      *
      * Captures a snapshot of the page within `rect`. Omitting `rect` will capture the
-     * whole visible page.
+     * whole visible page. The page is considered visible when its browser window is
+     * hidden and the capturer count is non-zero. If you would like the page to stay
+     * hidden, you should ensure that `stayHidden` is set to true.
      */
-    capturePage(rect?: Rectangle): Promise<Electron.NativeImage>;
+    capturePage(rect?: Rectangle, opts?: Opts): Promise<Electron.NativeImage>;
     /**
      * Clears the navigation history.
      */
@@ -11248,7 +11399,7 @@ declare namespace Electron {
      * page, or `waitForBeforeUnload` is false or unspecified), the WebContents will be
      * destroyed and no longer usable. The `destroyed` event will be emitted.
      */
-    close(opts?: Opts): void;
+    close(opts?: CloseOpts): void;
     /**
      * Closes the devtools.
      */
@@ -11265,13 +11416,6 @@ declare namespace Electron {
      * Executes the editing command `cut` in web page.
      */
     cut(): void;
-    /**
-     * Decrease the capturer count by one. The page will be set to hidden or occluded
-     * state when its browser window is hidden or occluded and the capturer count
-     * reaches zero. If you want to decrease the hidden capturer count instead you
-     * should set `stayHidden` to true.
-     */
-    decrementCapturerCount(stayHidden?: boolean, stayAwake?: boolean): void;
     /**
      * Executes the editing command `delete` in web page.
      */
@@ -11426,14 +11570,6 @@ declare namespace Electron {
      * Navigates to the specified offset from the "current entry".
      */
     goToOffset(offset: number): void;
-    /**
-     * Increase the capturer count by one. The page is considered visible when its
-     * browser window is hidden and the capturer count is non-zero. If you would like
-     * the page to stay hidden, you should ensure that `stayHidden` is set to true.
-     *
-     * This also affects the Page Visibility API.
-     */
-    incrementCapturerCount(size?: Size, stayHidden?: boolean, stayAwake?: boolean): void;
     /**
      * A promise that resolves with a key for the inserted CSS that can later be used
      * to remove the CSS via `contents.removeInsertedCSS(key)`.
@@ -11647,13 +11783,14 @@ declare namespace Electron {
      * just like `postMessage`, so prototype chains will not be included. Sending
      * Functions, Promises, Symbols, WeakMaps, or WeakSets will throw an exception.
      *
-     * > **NOTE**: Sending non-standard JavaScript types such as DOM objects or special
-     * Electron objects will throw an exception.
+     * :::warning
      *
-     * The renderer process can handle the message by listening to `channel` with the
-     * `ipcRenderer` module.
+     * Sending non-standard JavaScript types such as DOM objects or special Electron
+     * objects will throw an exception.
      *
-     * An example of sending messages from the main process to the renderer process:
+     * :::
+     *
+     * For additional reading, refer to Electron's IPC guide.
      */
     send(channel: string, ...args: any[]): void;
     /**
@@ -12924,6 +13061,8 @@ declare namespace Electron {
     /**
      * A `boolean`. When this attribute is present the guest page will have web
      * security disabled. Web security is enabled by default.
+     *
+     * This value can only be modified before the first navigation.
      */
     disablewebsecurity: boolean;
     /**
@@ -13328,6 +13467,12 @@ declare namespace Electron {
      */
     skipTaskbar?: boolean;
     /**
+     * Whether window should be hidden when the user toggles into mission control.
+     *
+     * @platform darwin
+     */
+    hiddenInMissionControl?: boolean;
+    /**
      * Whether the window is in kiosk mode. Default is `false`.
      */
     kiosk?: boolean;
@@ -13483,10 +13628,10 @@ declare namespace Electron {
      */
     zoomToPageWidth?: boolean;
     /**
-     * Tab group name, allows opening the window as a native tab on macOS 10.12+.
-     * Windows with the same tabbing identifier will be grouped together. This also
-     * adds a native new tab button to your window's tab bar and allows your `app` and
-     * window to receive the `new-window-for-tab` event.
+     * Tab group name, allows opening the window as a native tab. Windows with the same
+     * tabbing identifier will be grouped together. This also adds a native new tab
+     * button to your window's tab bar and allows your `app` and window to receive the
+     * `new-window-for-tab` event.
      *
      * @platform darwin
      */
@@ -13541,14 +13686,14 @@ declare namespace Electron {
      */
     origin?: string;
     /**
-     * The types of storages to clear, can contain: `appcache`, `cookies`,
-     * `filesystem`, `indexdb`, `localstorage`, `shadercache`, `websql`,
-     * `serviceworkers`, `cachestorage`. If not specified, clear all storage types.
+     * The types of storages to clear, can contain: `cookies`, `filesystem`, `indexdb`,
+     * `localstorage`, `shadercache`, `websql`, `serviceworkers`, `cachestorage`. If
+     * not specified, clear all storage types.
      */
     storages?: string[];
     /**
-     * The types of quotas to clear, can contain: `temporary`, `persistent`,
-     * `syncable`. If not specified, clear all quotas.
+     * The types of quotas to clear, can contain: `temporary`, `syncable`. If not
+     * specified, clear all quotas.
      */
     quotas?: string[];
   }
@@ -13621,6 +13766,15 @@ declare namespace Electron {
      * The origin URL of the request.
      */
     origin?: string;
+  }
+
+  interface CloseOpts {
+    /**
+     * if true, fire the `beforeunload` event before closing the page. If the page
+     * prevents the unload, the WebContents will not be closed. The
+     * `will-prevent-unload` will be fired if the page requests prevention of unload.
+     */
+    waitForBeforeUnload: boolean;
   }
 
   interface Config {
@@ -13848,6 +14002,10 @@ declare namespace Electron {
      * Filters out session or persistent cookies.
      */
     session?: boolean;
+    /**
+     * Filters cookies by httpOnly.
+     */
+    httpOnly?: boolean;
   }
 
   interface CookiesSetDetails {
@@ -14046,10 +14204,10 @@ declare namespace Electron {
 
   interface DevicePermissionHandlerHandlerDetails {
     /**
-     * The type of device that permission is being requested on, can be `hid` or
-     * `serial`.
+     * The type of device that permission is being requested on, can be `hid`,
+     * `serial`, or `usb`.
      */
-    deviceType: ('hid' | 'serial');
+    deviceType: ('hid' | 'serial' | 'usb');
     /**
      * The origin URL of the device permission check.
      */
@@ -14057,7 +14215,7 @@ declare namespace Electron {
     /**
      * the device that permission is being requested for.
      */
-    device: (HIDDevice) | (SerialPort);
+    device: (HIDDevice) | (SerialPort) | (USBDevice);
   }
 
   interface DidChangeThemeColorEvent extends Event {
@@ -14752,12 +14910,11 @@ declare namespace Electron {
      */
     message: string;
     /**
-     * Can be `"none"`, `"info"`, `"error"`, `"question"` or `"warning"`. On Windows,
-     * `"question"` displays the same icon as `"info"`, unless you set an icon using
-     * the `"icon"` option. On macOS, both `"warning"` and `"error"` display the same
-     * warning icon.
+     * Can be `none`, `info`, `error`, `question` or `warning`. On Windows, `question`
+     * displays the same icon as `info`, unless you set an icon using the `icon`
+     * option. On macOS, both `warning` and `error` display the same warning icon.
      */
-    type?: string;
+    type?: ('none' | 'info' | 'error' | 'question' | 'warning');
     /**
      * Array of texts for buttons. On Windows, an empty array will result in one button
      * labeled "OK".
@@ -14841,12 +14998,11 @@ declare namespace Electron {
      */
     message: string;
     /**
-     * Can be `"none"`, `"info"`, `"error"`, `"question"` or `"warning"`. On Windows,
-     * `"question"` displays the same icon as `"info"`, unless you set an icon using
-     * the `"icon"` option. On macOS, both `"warning"` and `"error"` display the same
-     * warning icon.
+     * Can be `none`, `info`, `error`, `question` or `warning`. On Windows, `question`
+     * displays the same icon as `info`, unless you set an icon using the `icon`
+     * option. On macOS, both `warning` and `error` display the same warning icon.
      */
-    type?: string;
+    type?: ('none' | 'info' | 'error' | 'question' | 'warning');
     /**
      * Array of texts for buttons. On Windows, an empty array will result in one button
      * labeled "OK".
@@ -14942,8 +15098,8 @@ declare namespace Electron {
 
   interface NotificationConstructorOptions {
     /**
-     * A title for the notification, which will be shown at the top of the notification
-     * window when it is shown.
+     * A title for the notification, which will be displayed at the top of the
+     * notification window when it is shown.
      */
     title?: string;
     /**
@@ -14958,7 +15114,8 @@ declare namespace Electron {
      */
     body?: string;
     /**
-     * Whether or not to emit an OS notification noise when showing the notification.
+     * Whether or not to suppress the OS notification noise when showing the
+     * notification.
      */
     silent?: boolean;
     /**
@@ -15289,11 +15446,13 @@ declare namespace Electron {
 
   interface Opts {
     /**
-     * if true, fire the `beforeunload` event before closing the page. If the page
-     * prevents the unload, the WebContents will not be closed. The
-     * `will-prevent-unload` will be fired if the page requests prevention of unload.
+     *  Keep the page hidden instead of visible. Default is `false`.
      */
-    waitForBeforeUnload: boolean;
+    stayHidden?: boolean;
+    /**
+     *  Keep the system awake instead of allowing it to sleep. Default is `false`.
+     */
+    stayAwake?: boolean;
   }
 
   interface PageFaviconUpdatedEvent extends Event {
@@ -15765,6 +15924,11 @@ declare namespace Electron {
     frame: WebFrameMain;
   }
 
+  interface SelectUsbDeviceDetails {
+    deviceList: USBDevice[];
+    frame: WebFrameMain;
+  }
+
   interface SerialPortRevokedDetails {
     port: SerialPort;
     frame: WebFrameMain;
@@ -15885,6 +16049,13 @@ declare namespace Electron {
      * Windows. If a WebFrameMain is specified, will capture audio from that frame.
      */
     audio?: (('loopback' | 'loopbackWithMute')) | (WebFrameMain);
+    /**
+     * If `audio` is a WebFrameMain and this is set to `true`, then local playback of
+     * audio will not be muted (e.g. using `MediaRecorder` to record `WebFrameMain`
+     * with this flag set to `true` will allow audio to pass through to the speakers
+     * while recording). Default is `false`.
+     */
+    enableLocalEcho?: boolean;
   }
 
   interface SystemMemoryInfo {
@@ -15934,8 +16105,8 @@ declare namespace Electron {
   interface TitleOptions {
     /**
      * The font family variant to display, can be `monospaced` or `monospacedDigit`.
-     * `monospaced` is available in macOS 10.15+ and `monospacedDigit` is available in
-     * macOS 10.11+.  When left blank, the title uses the default system font.
+     * `monospaced` is available in macOS 10.15+ When left blank, the title uses the
+     * default system font.
      */
     fontType?: ('monospaced' | 'monospacedDigit');
   }
@@ -16176,6 +16347,24 @@ declare namespace Electron {
     total: number;
   }
 
+  interface UsbDeviceAddedDetails {
+    device: USBDevice;
+    frame: WebFrameMain;
+  }
+
+  interface UsbDeviceRemovedDetails {
+    device: USBDevice;
+    frame: WebFrameMain;
+  }
+
+  interface UsbDeviceRevokedDetails {
+    device: USBDevice[];
+    /**
+     * The origin that the device has been revoked from.
+     */
+    origin?: string;
+  }
+
   interface VisibleOnAllWorkspacesOptions {
     /**
      * Sets whether the window should be visible above fullscreen windows.
@@ -16254,8 +16443,9 @@ declare namespace Electron {
      */
     footer?: string;
     /**
-     * Specify page size of the printed document. Can be `A3`, `A4`, `A5`, `Legal`,
-     * `Letter`, `Tabloid` or an Object containing `height` and `width`.
+     * Specify page size of the printed document. Can be `A0`, `A1`, `A2`, `A3`, `A4`,
+     * `A5`, `A6`, `Legal`, `Letter`, `Tabloid` or an Object containing `height` and
+     * `width`.
      */
     pageSize?: (string) | (Size);
   }
@@ -16993,6 +17183,7 @@ declare namespace Electron {
     type ClearCodeCachesOptions = Electron.ClearCodeCachesOptions;
     type ClearStorageDataOptions = Electron.ClearStorageDataOptions;
     type ClientRequestConstructorOptions = Electron.ClientRequestConstructorOptions;
+    type CloseOpts = Electron.CloseOpts;
     type Config = Electron.Config;
     type ConfigureHostResolverOptions = Electron.ConfigureHostResolverOptions;
     type ConsoleMessageEvent = Electron.ConsoleMessageEvent;
@@ -17097,6 +17288,7 @@ declare namespace Electron {
     type SaveDialogReturnValue = Electron.SaveDialogReturnValue;
     type SaveDialogSyncOptions = Electron.SaveDialogSyncOptions;
     type SelectHidDeviceDetails = Electron.SelectHidDeviceDetails;
+    type SelectUsbDeviceDetails = Electron.SelectUsbDeviceDetails;
     type SerialPortRevokedDetails = Electron.SerialPortRevokedDetails;
     type Settings = Electron.Settings;
     type SourcesOptions = Electron.SourcesOptions;
@@ -17122,6 +17314,9 @@ declare namespace Electron {
     type TraceBufferUsageReturnValue = Electron.TraceBufferUsageReturnValue;
     type UpdateTargetUrlEvent = Electron.UpdateTargetUrlEvent;
     type UploadProgress = Electron.UploadProgress;
+    type UsbDeviceAddedDetails = Electron.UsbDeviceAddedDetails;
+    type UsbDeviceRemovedDetails = Electron.UsbDeviceRemovedDetails;
+    type UsbDeviceRevokedDetails = Electron.UsbDeviceRevokedDetails;
     type VisibleOnAllWorkspacesOptions = Electron.VisibleOnAllWorkspacesOptions;
     type WebContentsPrintOptions = Electron.WebContentsPrintOptions;
     type WebviewTagPrintOptions = Electron.WebviewTagPrintOptions;
@@ -17201,6 +17396,7 @@ declare namespace Electron {
     type UploadData = Electron.UploadData;
     type UploadFile = Electron.UploadFile;
     type UploadRawData = Electron.UploadRawData;
+    type USBDevice = Electron.USBDevice;
     type UserDefaultTypes = Electron.UserDefaultTypes;
     type WebRequestFilter = Electron.WebRequestFilter;
     type WebSource = Electron.WebSource;
@@ -17299,6 +17495,7 @@ declare namespace Electron {
     type ClearCodeCachesOptions = Electron.ClearCodeCachesOptions;
     type ClearStorageDataOptions = Electron.ClearStorageDataOptions;
     type ClientRequestConstructorOptions = Electron.ClientRequestConstructorOptions;
+    type CloseOpts = Electron.CloseOpts;
     type Config = Electron.Config;
     type ConfigureHostResolverOptions = Electron.ConfigureHostResolverOptions;
     type ConsoleMessageEvent = Electron.ConsoleMessageEvent;
@@ -17403,6 +17600,7 @@ declare namespace Electron {
     type SaveDialogReturnValue = Electron.SaveDialogReturnValue;
     type SaveDialogSyncOptions = Electron.SaveDialogSyncOptions;
     type SelectHidDeviceDetails = Electron.SelectHidDeviceDetails;
+    type SelectUsbDeviceDetails = Electron.SelectUsbDeviceDetails;
     type SerialPortRevokedDetails = Electron.SerialPortRevokedDetails;
     type Settings = Electron.Settings;
     type SourcesOptions = Electron.SourcesOptions;
@@ -17428,6 +17626,9 @@ declare namespace Electron {
     type TraceBufferUsageReturnValue = Electron.TraceBufferUsageReturnValue;
     type UpdateTargetUrlEvent = Electron.UpdateTargetUrlEvent;
     type UploadProgress = Electron.UploadProgress;
+    type UsbDeviceAddedDetails = Electron.UsbDeviceAddedDetails;
+    type UsbDeviceRemovedDetails = Electron.UsbDeviceRemovedDetails;
+    type UsbDeviceRevokedDetails = Electron.UsbDeviceRevokedDetails;
     type VisibleOnAllWorkspacesOptions = Electron.VisibleOnAllWorkspacesOptions;
     type WebContentsPrintOptions = Electron.WebContentsPrintOptions;
     type WebviewTagPrintOptions = Electron.WebviewTagPrintOptions;
@@ -17507,6 +17708,7 @@ declare namespace Electron {
     type UploadData = Electron.UploadData;
     type UploadFile = Electron.UploadFile;
     type UploadRawData = Electron.UploadRawData;
+    type USBDevice = Electron.USBDevice;
     type UserDefaultTypes = Electron.UserDefaultTypes;
     type WebRequestFilter = Electron.WebRequestFilter;
     type WebSource = Electron.WebSource;
@@ -17538,6 +17740,7 @@ declare namespace Electron {
     type ClearCodeCachesOptions = Electron.ClearCodeCachesOptions;
     type ClearStorageDataOptions = Electron.ClearStorageDataOptions;
     type ClientRequestConstructorOptions = Electron.ClientRequestConstructorOptions;
+    type CloseOpts = Electron.CloseOpts;
     type Config = Electron.Config;
     type ConfigureHostResolverOptions = Electron.ConfigureHostResolverOptions;
     type ConsoleMessageEvent = Electron.ConsoleMessageEvent;
@@ -17642,6 +17845,7 @@ declare namespace Electron {
     type SaveDialogReturnValue = Electron.SaveDialogReturnValue;
     type SaveDialogSyncOptions = Electron.SaveDialogSyncOptions;
     type SelectHidDeviceDetails = Electron.SelectHidDeviceDetails;
+    type SelectUsbDeviceDetails = Electron.SelectUsbDeviceDetails;
     type SerialPortRevokedDetails = Electron.SerialPortRevokedDetails;
     type Settings = Electron.Settings;
     type SourcesOptions = Electron.SourcesOptions;
@@ -17667,6 +17871,9 @@ declare namespace Electron {
     type TraceBufferUsageReturnValue = Electron.TraceBufferUsageReturnValue;
     type UpdateTargetUrlEvent = Electron.UpdateTargetUrlEvent;
     type UploadProgress = Electron.UploadProgress;
+    type UsbDeviceAddedDetails = Electron.UsbDeviceAddedDetails;
+    type UsbDeviceRemovedDetails = Electron.UsbDeviceRemovedDetails;
+    type UsbDeviceRevokedDetails = Electron.UsbDeviceRevokedDetails;
     type VisibleOnAllWorkspacesOptions = Electron.VisibleOnAllWorkspacesOptions;
     type WebContentsPrintOptions = Electron.WebContentsPrintOptions;
     type WebviewTagPrintOptions = Electron.WebviewTagPrintOptions;
@@ -17746,6 +17953,7 @@ declare namespace Electron {
     type UploadData = Electron.UploadData;
     type UploadFile = Electron.UploadFile;
     type UploadRawData = Electron.UploadRawData;
+    type USBDevice = Electron.USBDevice;
     type UserDefaultTypes = Electron.UserDefaultTypes;
     type WebRequestFilter = Electron.WebRequestFilter;
     type WebSource = Electron.WebSource;
@@ -17858,6 +18066,7 @@ declare namespace Electron {
     type ClearCodeCachesOptions = Electron.ClearCodeCachesOptions;
     type ClearStorageDataOptions = Electron.ClearStorageDataOptions;
     type ClientRequestConstructorOptions = Electron.ClientRequestConstructorOptions;
+    type CloseOpts = Electron.CloseOpts;
     type Config = Electron.Config;
     type ConfigureHostResolverOptions = Electron.ConfigureHostResolverOptions;
     type ConsoleMessageEvent = Electron.ConsoleMessageEvent;
@@ -17962,6 +18171,7 @@ declare namespace Electron {
     type SaveDialogReturnValue = Electron.SaveDialogReturnValue;
     type SaveDialogSyncOptions = Electron.SaveDialogSyncOptions;
     type SelectHidDeviceDetails = Electron.SelectHidDeviceDetails;
+    type SelectUsbDeviceDetails = Electron.SelectUsbDeviceDetails;
     type SerialPortRevokedDetails = Electron.SerialPortRevokedDetails;
     type Settings = Electron.Settings;
     type SourcesOptions = Electron.SourcesOptions;
@@ -17987,6 +18197,9 @@ declare namespace Electron {
     type TraceBufferUsageReturnValue = Electron.TraceBufferUsageReturnValue;
     type UpdateTargetUrlEvent = Electron.UpdateTargetUrlEvent;
     type UploadProgress = Electron.UploadProgress;
+    type UsbDeviceAddedDetails = Electron.UsbDeviceAddedDetails;
+    type UsbDeviceRemovedDetails = Electron.UsbDeviceRemovedDetails;
+    type UsbDeviceRevokedDetails = Electron.UsbDeviceRevokedDetails;
     type VisibleOnAllWorkspacesOptions = Electron.VisibleOnAllWorkspacesOptions;
     type WebContentsPrintOptions = Electron.WebContentsPrintOptions;
     type WebviewTagPrintOptions = Electron.WebviewTagPrintOptions;
@@ -18066,6 +18279,7 @@ declare namespace Electron {
     type UploadData = Electron.UploadData;
     type UploadFile = Electron.UploadFile;
     type UploadRawData = Electron.UploadRawData;
+    type USBDevice = Electron.USBDevice;
     type UserDefaultTypes = Electron.UserDefaultTypes;
     type WebRequestFilter = Electron.WebRequestFilter;
     type WebSource = Electron.WebSource;
