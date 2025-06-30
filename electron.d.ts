@@ -1,4 +1,4 @@
-// Type definitions for Electron 36.2.1
+// Type definitions for Electron 37.1.0
 // Project: http://electronjs.org/
 // Definitions by: The Electron Team <https://github.com/electron/electron>
 // Definitions: https://github.com/electron/typescript-definitions
@@ -2719,6 +2719,12 @@ declare namespace Electron {
      */
     isClosable(): boolean;
     /**
+     * whether or not content protection is currently enabled.
+     *
+     * @platform darwin,win32
+     */
+    isContentProtected(): boolean;
+    /**
      * Whether the window is destroyed.
      */
     isDestroyed(): boolean;
@@ -3554,6 +3560,14 @@ declare namespace Electron {
 
     // Docs: https://electronjs.org/docs/api/structures/base-window-options
 
+    /**
+     * The accent color for the window. By default, follows user preference in System
+     * Settings. Set to `false` to explicitly disable, or set the color in Hex, RGB,
+     * RGBA, HSL, HSLA or named CSS color format. Alpha values will be ignored.
+     *
+     * @platform win32
+     */
+    accentColor?: (boolean) | (string);
     /**
      * Whether clicking an inactive window will also click through to the web contents.
      * Default is `false` on macOS. This option is not configurable on other platforms.
@@ -5364,6 +5378,12 @@ declare namespace Electron {
      * @platform darwin,win32
      */
     isClosable(): boolean;
+    /**
+     * whether or not content protection is currently enabled.
+     *
+     * @platform darwin,win32
+     */
+    isContentProtected(): boolean;
     /**
      * Whether the window is destroyed.
      */
@@ -8212,6 +8232,10 @@ declare namespace Electron {
     // Docs: https://electronjs.org/docs/api/structures/hid-device
 
     /**
+     * an array of report formats. See MDN documentation for more.
+     */
+    collections: Array<Collections>;
+    /**
      * Unique identifier for the device.
      */
     deviceId: string;
@@ -8236,6 +8260,32 @@ declare namespace Electron {
      * The USB vendor ID.
      */
     vendorId: number;
+  }
+
+  class ImageView extends View {
+
+    // Docs: https://electronjs.org/docs/api/image-view
+
+    /**
+     * Emitted when the view's bounds have changed in response to being laid out. The
+     * new bounds can be retrieved with `view.getBounds()`.
+     */
+    on(event: 'bounds-changed', listener: () => void): this;
+    off(event: 'bounds-changed', listener: () => void): this;
+    once(event: 'bounds-changed', listener: () => void): this;
+    addListener(event: 'bounds-changed', listener: () => void): this;
+    removeListener(event: 'bounds-changed', listener: () => void): this;
+    /**
+     * ImageView
+     */
+    constructor();
+    /**
+     * Sets the image for this `ImageView`. Note that only image formats supported by
+     * `NativeImage` can be used with an `ImageView`.
+     *
+     * @experimental
+     */
+    setImage(image: NativeImage): void;
   }
 
   interface InAppPurchase extends NodeJS.EventEmitter {
@@ -9204,9 +9254,11 @@ declare namespace Electron {
     toolTip: string;
     /**
      * A `string` indicating the type of the item. Can be `normal`, `separator`,
-     * `submenu`, `checkbox` or `radio`.
+     * `submenu`, `checkbox`, `radio`, `header` or `palette`.
+     *
+     * > [!NOTE] `header` and `palette` are only available on macOS 14 and up.
      */
-    type: ('normal' | 'separator' | 'submenu' | 'checkbox' | 'radio');
+    type: ('normal' | 'separator' | 'submenu' | 'checkbox' | 'radio' | 'header' | 'palette');
     /**
      * An `Accelerator | null` indicating the item's user-assigned accelerator for the
      * menu item.
@@ -10998,9 +11050,8 @@ declare namespace Electron {
      */
     referrer?: string;
     /**
-     * The session used for requesting URL, by default the HTTP request will reuse the
-     * current session. Setting `session` to `null` would use a random independent
-     * session. This is only used for URL responses.
+     * The session used for requesting URL. The HTTP request will reuse the current
+     * session by default.
      */
     session?: Session;
     /**
@@ -11217,7 +11268,8 @@ declare namespace Electron {
      * line flag is provided `--password-store="kwallet"`.
      * * `kwallet5` - When the desktop session is `kde5` or if the following command
      * line flag is provided `--password-store="kwallet5"`.
-     * * `kwallet6` - When the desktop session is `kde6`.
+     * * `kwallet6` - When the desktop session is `kde6` or if the following command
+     * line flag is provided `--password-store="kwallet6"`.
      * * `unknown` - When the function is called before app has emitted the `ready`
      * event.
      *
@@ -11295,7 +11347,9 @@ declare namespace Electron {
      * Converts a screen DIP point to a screen physical point. The DPI scale is
      * performed relative to the display containing the DIP point.
      *
-     * @platform win32
+     * Not currently supported on Wayland.
+     *
+     * @platform win32,linux
      */
     dipToScreenPoint(point: Point): Point;
     /**
@@ -11332,7 +11386,10 @@ declare namespace Electron {
      * Converts a screen physical point to a screen DIP point. The DPI scale is
      * performed relative to the display containing the physical point.
      *
-     * @platform win32
+     * Not currently supported on Wayland - if used there it will return the point
+     * passed in with no changes.
+     *
+     * @platform win32,linux
      */
     screenToDipPoint(point: Point): Point;
     /**
@@ -11487,6 +11544,12 @@ declare namespace Electron {
      * @experimental
      */
     readonly scope: string;
+    /**
+     * A `string` representing the script URL of the service worker.
+     *
+     * @experimental
+     */
+    readonly scriptURL: string;
     /**
      * A `number` representing the ID of the specific version of the service worker
      * script in its scope.
@@ -14957,6 +15020,21 @@ declare namespace Electron {
                                                 */
                                                input: Input) => void): this;
     /**
+     * Emitted before dispatching mouse events in the page.
+     *
+     * Calling `event.preventDefault` will prevent the page mouse events.
+     */
+    on(event: 'before-mouse-event', listener: (event: Event,
+                                               mouse: MouseInputEvent) => void): this;
+    off(event: 'before-mouse-event', listener: (event: Event,
+                                               mouse: MouseInputEvent) => void): this;
+    once(event: 'before-mouse-event', listener: (event: Event,
+                                               mouse: MouseInputEvent) => void): this;
+    addListener(event: 'before-mouse-event', listener: (event: Event,
+                                               mouse: MouseInputEvent) => void): this;
+    removeListener(event: 'before-mouse-event', listener: (event: Event,
+                                               mouse: MouseInputEvent) => void): this;
+    /**
      * Emitted when the `WebContents` loses focus.
      */
     on(event: 'blur', listener: () => void): this;
@@ -16316,9 +16394,11 @@ declare namespace Electron {
      * the `deviceId` of the device to be selected.  Passing an empty string to
      * `callback` will cancel the request.
      *
-     * If an event listener is not added for this event, or if `event.preventDefault`
-     * is not called when handling this event, the first available device will be
-     * automatically selected.
+     * If no event listener is added for this event, all bluetooth requests will be
+     * cancelled.
+     *
+     * If `event.preventDefault` is not called when handling this event, the first
+     * available device will be automatically selected.
      *
      * Due to the nature of bluetooth, scanning for devices when
      * `navigator.bluetooth.requestDevice` is called may take time and will cause
@@ -19482,6 +19562,16 @@ declare namespace Electron {
      * `only-if-cached`.
      */
     cache?: ('default' | 'no-store' | 'reload' | 'no-cache' | 'force-cache' | 'only-if-cached');
+    /**
+     * can be `throttled`, `idle`, `lowest`, `low`, `medium`, or `highest`. Defaults to
+     * `idle`.
+     */
+    priority?: ('throttled' | 'idle' | 'lowest' | 'low' | 'medium' | 'highest');
+    /**
+     * the incremental loading flag as part of HTTP extensible priorities (RFC 9218).
+     * Default is `true`.
+     */
+    priorityIncremental?: boolean;
   }
 
   interface CloseOpts {
@@ -19491,6 +19581,44 @@ declare namespace Electron {
      * `will-prevent-unload` will be fired if the page requests prevention of unload.
      */
     waitForBeforeUnload: boolean;
+  }
+
+  interface Collections {
+    /**
+     * An integer representing the usage ID component of the HID usage associated with
+     * this collection.
+     */
+    usage: number;
+    /**
+     * An integer representing the usage page component of the HID usage associated
+     * with this collection.
+     */
+    usagePage: number;
+    /**
+     * An 8-bit value representing the collection type, which describes a different
+     * relationship between the grouped items.
+     */
+    type: number;
+    /**
+     * An array of sub-collections which takes the same format as a top-level
+     * collection.
+     */
+    children: Children[];
+    /**
+     * An array of inputReport items which represent individual input reports described
+     * in this collection.
+     */
+    inputReports: InputReports[];
+    /**
+     * An array of outputReport items which represent individual output reports
+     * described in this collection.
+     */
+    outputReports: OutputReports[];
+    /**
+     * An array of featureReport items which represent individual feature reports
+     * described in this collection.
+     */
+    featureReports: FeatureReports[];
   }
 
   interface Config {
@@ -20697,11 +20825,13 @@ declare namespace Electron {
      * be ignored. See roles.
      */
     role?: ('undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'pasteAndMatchStyle' | 'delete' | 'selectAll' | 'reload' | 'forceReload' | 'toggleDevTools' | 'resetZoom' | 'zoomIn' | 'zoomOut' | 'toggleSpellChecker' | 'togglefullscreen' | 'window' | 'minimize' | 'close' | 'help' | 'about' | 'services' | 'hide' | 'hideOthers' | 'unhide' | 'quit' | 'showSubstitutions' | 'toggleSmartQuotes' | 'toggleSmartDashes' | 'toggleTextReplacement' | 'startSpeaking' | 'stopSpeaking' | 'zoom' | 'front' | 'appMenu' | 'fileMenu' | 'editMenu' | 'viewMenu' | 'shareMenu' | 'recentDocuments' | 'toggleTabBar' | 'selectNextTab' | 'selectPreviousTab' | 'showAllTabs' | 'mergeAllWindows' | 'clearRecentDocuments' | 'moveTabToNewWindow' | 'windowMenu');
-    /**
-     * Can be `normal`, `separator`, `submenu`, `checkbox` or `radio`.
-     */
-    type?: ('normal' | 'separator' | 'submenu' | 'checkbox' | 'radio');
+    type?: ('normal' | 'separator' | 'submenu' | 'checkbox' | 'radio' | 'header' | 'palette');
     label?: string;
+    /**
+     * Available in macOS >= 14.4
+     *
+     * @platform darwin
+     */
     sublabel?: string;
     /**
      * Hover text for this menu item.
@@ -22866,6 +22996,9 @@ declare namespace Electron {
     edge: ('bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right');
   }
 
+  interface Children {
+  }
+
   interface EditFlags {
     /**
      * Whether the renderer believes it can undo.
@@ -22904,6 +23037,9 @@ declare namespace Electron {
   interface Env {
   }
 
+  interface FeatureReports {
+  }
+
   interface FoundInPageResult {
     requestId: number;
     /**
@@ -22919,6 +23055,9 @@ declare namespace Electron {
      */
     selectionArea: Rectangle;
     finalUpdate: boolean;
+  }
+
+  interface InputReports {
   }
 
   interface LaunchItems {
@@ -23053,6 +23192,9 @@ declare namespace Electron {
      * between two consecutively received frames.
      */
     frameCount?: number;
+  }
+
+  interface OutputReports {
   }
 
   interface PageRanges {
@@ -23253,6 +23395,7 @@ declare namespace Electron {
     type ClientCertRequestParams = Electron.ClientCertRequestParams;
     type ClientRequestConstructorOptions = Electron.ClientRequestConstructorOptions;
     type CloseOpts = Electron.CloseOpts;
+    type Collections = Electron.Collections;
     type Config = Electron.Config;
     type ConfigureHostResolverOptions = Electron.ConfigureHostResolverOptions;
     type ConsoleMessageEvent = Electron.ConsoleMessageEvent;
@@ -23421,13 +23564,17 @@ declare namespace Electron {
     type WillFrameNavigateEvent = Electron.WillFrameNavigateEvent;
     type WillNavigateEvent = Electron.WillNavigateEvent;
     type WillResizeDetails = Electron.WillResizeDetails;
+    type Children = Electron.Children;
     type EditFlags = Electron.EditFlags;
     type Env = Electron.Env;
+    type FeatureReports = Electron.FeatureReports;
     type FoundInPageResult = Electron.FoundInPageResult;
+    type InputReports = Electron.InputReports;
     type LaunchItems = Electron.LaunchItems;
     type Margins = Electron.Margins;
     type MediaFlags = Electron.MediaFlags;
     type Metadata = Electron.Metadata;
+    type OutputReports = Electron.OutputReports;
     type PageRanges = Electron.PageRanges;
     type Params = Electron.Params;
     type Planes = Electron.Planes;
@@ -23543,6 +23690,7 @@ declare namespace Electron {
     type Extensions = Electron.Extensions;
     const globalShortcut: GlobalShortcut;
     type GlobalShortcut = Electron.GlobalShortcut;
+    class ImageView extends Electron.ImageView {}
     const inAppPurchase: InAppPurchase;
     type InAppPurchase = Electron.InAppPurchase;
     type IncomingMessage = Electron.IncomingMessage;
@@ -23624,6 +23772,7 @@ declare namespace Electron {
     type ClientCertRequestParams = Electron.ClientCertRequestParams;
     type ClientRequestConstructorOptions = Electron.ClientRequestConstructorOptions;
     type CloseOpts = Electron.CloseOpts;
+    type Collections = Electron.Collections;
     type Config = Electron.Config;
     type ConfigureHostResolverOptions = Electron.ConfigureHostResolverOptions;
     type ConsoleMessageEvent = Electron.ConsoleMessageEvent;
@@ -23792,13 +23941,17 @@ declare namespace Electron {
     type WillFrameNavigateEvent = Electron.WillFrameNavigateEvent;
     type WillNavigateEvent = Electron.WillNavigateEvent;
     type WillResizeDetails = Electron.WillResizeDetails;
+    type Children = Electron.Children;
     type EditFlags = Electron.EditFlags;
     type Env = Electron.Env;
+    type FeatureReports = Electron.FeatureReports;
     type FoundInPageResult = Electron.FoundInPageResult;
+    type InputReports = Electron.InputReports;
     type LaunchItems = Electron.LaunchItems;
     type Margins = Electron.Margins;
     type MediaFlags = Electron.MediaFlags;
     type Metadata = Electron.Metadata;
+    type OutputReports = Electron.OutputReports;
     type PageRanges = Electron.PageRanges;
     type Params = Electron.Params;
     type Planes = Electron.Planes;
@@ -23924,6 +24077,7 @@ declare namespace Electron {
     type ClientCertRequestParams = Electron.ClientCertRequestParams;
     type ClientRequestConstructorOptions = Electron.ClientRequestConstructorOptions;
     type CloseOpts = Electron.CloseOpts;
+    type Collections = Electron.Collections;
     type Config = Electron.Config;
     type ConfigureHostResolverOptions = Electron.ConfigureHostResolverOptions;
     type ConsoleMessageEvent = Electron.ConsoleMessageEvent;
@@ -24092,13 +24246,17 @@ declare namespace Electron {
     type WillFrameNavigateEvent = Electron.WillFrameNavigateEvent;
     type WillNavigateEvent = Electron.WillNavigateEvent;
     type WillResizeDetails = Electron.WillResizeDetails;
+    type Children = Electron.Children;
     type EditFlags = Electron.EditFlags;
     type Env = Electron.Env;
+    type FeatureReports = Electron.FeatureReports;
     type FoundInPageResult = Electron.FoundInPageResult;
+    type InputReports = Electron.InputReports;
     type LaunchItems = Electron.LaunchItems;
     type Margins = Electron.Margins;
     type MediaFlags = Electron.MediaFlags;
     type Metadata = Electron.Metadata;
+    type OutputReports = Electron.OutputReports;
     type PageRanges = Electron.PageRanges;
     type Params = Electron.Params;
     type Planes = Electron.Planes;
@@ -24221,6 +24379,7 @@ declare namespace Electron {
     type ClientCertRequestParams = Electron.ClientCertRequestParams;
     type ClientRequestConstructorOptions = Electron.ClientRequestConstructorOptions;
     type CloseOpts = Electron.CloseOpts;
+    type Collections = Electron.Collections;
     type Config = Electron.Config;
     type ConfigureHostResolverOptions = Electron.ConfigureHostResolverOptions;
     type ConsoleMessageEvent = Electron.ConsoleMessageEvent;
@@ -24389,13 +24548,17 @@ declare namespace Electron {
     type WillFrameNavigateEvent = Electron.WillFrameNavigateEvent;
     type WillNavigateEvent = Electron.WillNavigateEvent;
     type WillResizeDetails = Electron.WillResizeDetails;
+    type Children = Electron.Children;
     type EditFlags = Electron.EditFlags;
     type Env = Electron.Env;
+    type FeatureReports = Electron.FeatureReports;
     type FoundInPageResult = Electron.FoundInPageResult;
+    type InputReports = Electron.InputReports;
     type LaunchItems = Electron.LaunchItems;
     type Margins = Electron.Margins;
     type MediaFlags = Electron.MediaFlags;
     type Metadata = Electron.Metadata;
+    type OutputReports = Electron.OutputReports;
     type PageRanges = Electron.PageRanges;
     type Params = Electron.Params;
     type Planes = Electron.Planes;
@@ -24517,6 +24680,7 @@ declare namespace Electron {
     type Extensions = Electron.Extensions;
     const globalShortcut: GlobalShortcut;
     type GlobalShortcut = Electron.GlobalShortcut;
+    class ImageView extends Electron.ImageView {}
     const inAppPurchase: InAppPurchase;
     type InAppPurchase = Electron.InAppPurchase;
     type IncomingMessage = Electron.IncomingMessage;
@@ -24609,6 +24773,7 @@ declare namespace Electron {
     type ClientCertRequestParams = Electron.ClientCertRequestParams;
     type ClientRequestConstructorOptions = Electron.ClientRequestConstructorOptions;
     type CloseOpts = Electron.CloseOpts;
+    type Collections = Electron.Collections;
     type Config = Electron.Config;
     type ConfigureHostResolverOptions = Electron.ConfigureHostResolverOptions;
     type ConsoleMessageEvent = Electron.ConsoleMessageEvent;
@@ -24777,13 +24942,17 @@ declare namespace Electron {
     type WillFrameNavigateEvent = Electron.WillFrameNavigateEvent;
     type WillNavigateEvent = Electron.WillNavigateEvent;
     type WillResizeDetails = Electron.WillResizeDetails;
+    type Children = Electron.Children;
     type EditFlags = Electron.EditFlags;
     type Env = Electron.Env;
+    type FeatureReports = Electron.FeatureReports;
     type FoundInPageResult = Electron.FoundInPageResult;
+    type InputReports = Electron.InputReports;
     type LaunchItems = Electron.LaunchItems;
     type Margins = Electron.Margins;
     type MediaFlags = Electron.MediaFlags;
     type Metadata = Electron.Metadata;
+    type OutputReports = Electron.OutputReports;
     type PageRanges = Electron.PageRanges;
     type Params = Electron.Params;
     type Planes = Electron.Planes;
